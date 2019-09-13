@@ -1,0 +1,29 @@
+{
+  "name": "@vkontakte/vk-miniapps-deploy",
+  "version": "0.0.2",
+  "description": "deploy to vk-miniapps hosting with one command",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "./bin/vk-miniapps-deploy"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=8.10"
+  },
+  "bin": "./bin/vk-miniapps-deploy",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vkcom/vk-miniapps-deploy.git"
+  },
+  "homepage": "https://github.com/vkcom/vk-miniapps-deploy",
+  "dependencies": {
+    "chalk": "^1.1.1",
+    "form-data": "^2.4.0",
+    "fs-extra": "^8.0.1",
+    "node-fetch": "^2.6.0",
+    "prompts": "^2.1.0",
+    "require-module": "^0.1.0",
+    "zip-a-folder": "0.0.8"
+  }
+}

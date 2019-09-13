@@ -1,0 +1,6 @@
+{
+  "staticpath": "build",
+  "app_id": "",
+  "secret_token": "",
+  "service_token": ""
+}
