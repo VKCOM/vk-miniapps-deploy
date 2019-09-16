@@ -1,6 +1,6 @@
 {
   "name": "@vkontakte/vk-miniapps-deploy",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "deploy to vk-miniapps hosting with one command",
   "main": "index.js",
   "scripts": {

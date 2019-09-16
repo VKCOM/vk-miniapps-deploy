@@ -133,10 +133,10 @@ async function run(cfg) {
     if (await !fs.pathExists(bundleFile)) {
     } else {
       upload(uploadURL, bundleFile).then((r) => {
-        if (r.file) {
-          console.log('Uploaded!')
+        if (r.version) {
+          console.log('Uploaded version ' + r.version + '!')
         } else {
-          console.error('from upload:', r)
+          console.error('Upload error:', r)
         }
 
       });
