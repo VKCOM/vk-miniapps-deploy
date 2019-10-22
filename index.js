@@ -118,7 +118,7 @@ async function run(cfg) {
       await fs.writeJson('./vk-hosting-config.json', cfg, {spaces: 2});
     }
 
-    const r = await api('apps.getBundleUploadServer', {app_id: cfg.app_id});
+    const r = await api('apps.getBundleUploadServer', {app_id: cfg.app_id, endpoints: cfg.endpoints});
     if (!r.upload_url) {
       throw new Error(JSON.stringify(r));
     }

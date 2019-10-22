@@ -2,5 +2,10 @@
   "staticpath": "build",
   "app_id": "",
   "secret_token": "",
-  "service_token": ""
+  "service_token": "",
+  "endpoints": {
+    "mvk": "index.html",
+    "web": "index.html",
+    "mobile": "index.html"
+  }
 }
