@@ -1,14 +1,15 @@
-var chalk = require('chalk');
-var prompt = require('prompts');
+const packageJson = require('./package.json');
+const chalk = require('chalk');
+const prompt = require('prompts');
 const fetch = require('node-fetch');
 const { zip } = require('zip-a-folder');
 const fs = require('fs-extra');
-
-var FormData = require('form-data');
+const FormData = require('form-data');
+const Configstore = require('configstore');
+const vault = new Configstore(packageJson.name, {});
 
 var configJSON = require('require-module')('./vk-hosting-config.json');
 var cfg = configJSON || {};
-
 prompt.message = "vk-mini-apps-deploy".grey;
 prompt.delimiter = "=>".grey;
 
@@ -109,13 +110,21 @@ async function upload(uploadUrl, bundleFile) {
 
 async function run(cfg) {
   try {
-    if (!cfg.access_token) {
-      const access_token = await auth();
-      if (access_token) {
-        cfg.access_token = access_token;
-      }
+    if (process.env.MINI_APPS_ACCESS_TOKEN) {
+      cfg.access_token = process.env.MINI_APPS_ACCESS_TOKEN;
+    }
 
-      await fs.writeJson('./vk-hosting-config.json', cfg, {spaces: 2});
+    if (!cfg.access_token && vault.get('access_token')) {
+      cfg.access_token = vault.get('access_token');
+    }
+
+    if (!cfg.access_token) {
+      console.log('Try to retrieve access token...');
+      const access_token = await auth();
+      cfg.access_token = access_token;
+      vault.set('access_token', access_token);
+      console.log(chalk.cyan('Token is saved in configstore!'));
+      console.log(chalk.cyan('\nFor your CI, you can use \n > $ env MINI_APPS_ACCESS_TOKEN=' + access_token + ' yarn deploy'));
     }
 
     const r = await api('apps.getBundleUploadServer', {app_id: cfg.app_id, endpoints: cfg.endpoints});

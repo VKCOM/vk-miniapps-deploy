@@ -1,6 +1,6 @@
 {
   "name": "@vkontakte/vk-miniapps-deploy",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "deploy to vk-miniapps hosting with one command",
   "main": "index.js",
   "scripts": {
@@ -19,6 +19,7 @@
   "homepage": "https://github.com/vkcom/vk-miniapps-deploy",
   "dependencies": {
     "chalk": "^1.1.1",
+    "configstore": "^5.0.0",
     "form-data": "^2.4.0",
     "fs-extra": "^8.0.1",
     "node-fetch": "^2.6.0",

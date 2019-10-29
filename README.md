@@ -39,14 +39,17 @@ To configure `vk-miniapps-deploy` all you need to do is specify a couple of thin
 {
   "staticpath": "build",
   "app_id": "...",
-  "secret_token": "...",
-  "service_token": "..."
 }
 ```
 
 ## How to use:
-* Make sure that in package.json the key value "homepage" is "./"
+* Make sure that in package.json the key value «homepage» is «./»
 * Copy the example config to the root folder of your application vk-hosting-config.json.example
-  and remove the suffix ".example"
-* Specify the necessary tokens and keys
-* Run vk-miniapps-deploy
+  and remove the suffix «.example»
+* Run yarn deploy
+
+For your CI, you can use
+
+```bash
+$ env MINI_APPS_ACCESS_TOKEN=fcbc78243e0e993969d478df4eb11376bcec6d806bb6dbaad80e8c7b32d59b9e9a52d5296b53fd00bdf7d yarn deploy
+```
