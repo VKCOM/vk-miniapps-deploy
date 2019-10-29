@@ -26,7 +26,7 @@ First add this to your scripts section of `package.json`:
 And then install `vk-miniapps-deploy` as a devDependency:
 
 ```
-npm install vk-miniapps-deploy --save-dev
+npm install @vkontakte/vk-miniapps-deploy --save-dev
 ```
 
 And now you can run `npm run deploy` to run the `vk-miniapps-deploy` installed in the local `node_modules` folder (even if you have never done `npm install vk-miniapps-deploy -g`).
