@@ -39,6 +39,11 @@ To configure `vk-miniapps-deploy` all you need to do is specify a couple of thin
 {
   "staticpath": "build",
   "app_id": "...",
+  "endpoints": {
+    "mobile": "mobile.html",
+    "mvk": "mvk.html",
+    "web": "web.html"
+  }
 }
 ```
 
@@ -51,5 +56,8 @@ To configure `vk-miniapps-deploy` all you need to do is specify a couple of thin
 For your CI, you can use
 
 ```bash
-$ env MINI_APPS_ACCESS_TOKEN=fcbc78243e0e993969d478df4eb11376bcec6d806bb6dbaad80e8c7b32d59b9e9a52d5296b53fd00bdf7d yarn deploy
+$ env MINI_APPS_ACCESS_TOKEN=super_secret_access_token_value yarn deploy
 ```
+
+There are two values to specify MINI_APPS_ENVIRONMENT: `production` or `dev`. 
+All production builds will be also deployed on dev environment.  

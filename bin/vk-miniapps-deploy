@@ -40,9 +40,9 @@ async function run() {
     });
 
     if (result.result) {
-      deploy.run(cfg);
+      const status = await deploy.run(cfg) ? 0 : 1;
+      process.exit(status);
     }
   }
-};
-
-run();
+}
+run().then(r => console.log(r));

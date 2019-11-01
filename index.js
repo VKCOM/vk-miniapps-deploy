@@ -19,6 +19,15 @@ const OAUTH_HOST = cfg.oauth_host || 'https://oauth.vk.com/';
 const API_VERSION = '5.101';
 const DEPLOY_APP_ID = 6670517;
 
+const APPLICATION_ENV_DEV = 1;
+const APPLICATION_ENV_PRODUCTION = 2;
+
+const CODE_SUCCESS = 200;
+const CODE_DEPLOY = 201;
+const CODE_SKIP = 202;
+
+const TYPE_SUCCESS = 'success';
+
 async function auth() {
   const get_auth_code = await fetch(OAUTH_HOST + 'get_auth_code?scope=offline&client_id=' + DEPLOY_APP_ID);
   const get_auth_code_res = await get_auth_code.json();
@@ -53,7 +62,7 @@ async function auth() {
       const code_auth_token = await fetch(OAUTH_HOST + 'code_auth_token?device_id=' + device_id + '&client_id=' + DEPLOY_APP_ID);
       const code_auth_token_json = await code_auth_token.json();
 
-      if (code_auth_token.status !== 200) {
+      if (code_auth_token.status !== CODE_SUCCESS) {
         console.error('code_auth_token.status: ', code_auth_token.status, code_auth_token_json);
         continue;
       }
@@ -108,8 +117,95 @@ async function upload(uploadUrl, bundleFile) {
   }
 }
 
+async function handleQueue(user_id, base_url, key, ts, handled) {
+  const url = base_url + '?act=a_check&key=' + key + '&ts=' + ts + '&id=' + user_id + '&wait=5';
+  const query = await fetch(url);
+  const res = await query.json();
+
+  if (handled === false) {
+    handled = {
+      production: false,
+      dev: false,
+    };
+  }
+
+  if (handled.production && handled.dev) {
+    return true;
+  }
+
+  if (res.events.length) {
+    for (let i = 0; i < res.events.length; i++) {
+      let event = res.events[i].data;
+      if (event.type === 'error') {
+        const message = event.message || '';
+        console.error(chalk.red('Deploy failed, error code: #' + event.code + ' ' + message));
+        return false;
+      }
+
+      if (event.type === TYPE_SUCCESS) {
+        if (event.code === CODE_SUCCESS) {
+          console.info(chalk.green('Deploy success...'));
+          continue;
+        }
+
+        if (event.code === CODE_SKIP) {
+          switch (event.message.environment) {
+            case APPLICATION_ENV_DEV:
+              handled.dev = true;
+              break;
+
+            case APPLICATION_ENV_PRODUCTION:
+              handled.production = true;
+              break;
+          }
+          continue;
+        }
+
+        if (event.code === CODE_DEPLOY) {
+          if (event.message && event.message.urls && Object.keys(event.message.urls).length) {
+            const urls = event.message.urls;
+            if (event.message.is_production) {
+              handled.production = true;
+              console.info(chalk.green('URLs changed for production:'));
+            } else {
+              handled.dev = true;
+              console.info(chalk.green('URLs changed for dev:'));
+            }
+
+            let urlKeys = Object.keys(urls);
+            for (let j = 0; j < urlKeys.length; j++) {
+              console.log(urlKeys[j] + ':\t' + urls[urlKeys[j]]);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return handleQueue(user_id, base_url, key, res.ts, handled);
+}
+
+async function getQueue(version) {
+  const r = await api('apps.subscribeToHostingQueue', {app_id: cfg.app_id, version: version});
+  if (!r.base_url || !r.key || !r.ts || !r.user_id) {
+    throw new Error(JSON.stringify(r));
+  }
+
+  return handleQueue(r.user_id, r.base_url, r.key, r.ts, false);
+}
+
 async function run(cfg) {
   try {
+    const defaultEnvironment = APPLICATION_ENV_DEV | APPLICATION_ENV_PRODUCTION;
+    const environmentMapping = {
+      dev: APPLICATION_ENV_DEV,
+      production: APPLICATION_ENV_PRODUCTION
+    };
+
+    const environment = process.env.MINI_APPS_ENVIRONMENT
+      ? (environmentMapping[process.env.MINI_APPS_ENVIRONMENT] || defaultEnvironment)
+      : defaultEnvironment;
+
     if (process.env.MINI_APPS_ACCESS_TOKEN) {
       cfg.access_token = process.env.MINI_APPS_ACCESS_TOKEN;
     }
@@ -127,7 +223,15 @@ async function run(cfg) {
       console.log(chalk.cyan('\nFor your CI, you can use \n > $ env MINI_APPS_ACCESS_TOKEN=' + access_token + ' yarn deploy'));
     }
 
-    const r = await api('apps.getBundleUploadServer', {app_id: cfg.app_id, endpoints: cfg.endpoints});
+    const params = {app_id: cfg.app_id, environment: environment};
+    const endpointPlatformKeys = Object.keys(cfg.endpoints);
+    if (endpointPlatformKeys.length) {
+      for (let i = 0; i < endpointPlatformKeys.length; i++) {
+        params['endpoint_' + endpointPlatformKeys[i]] = cfg.endpoints[endpointPlatformKeys[i]]
+      }
+    }
+
+    const r = await api('apps.getBundleUploadServer', params);
     if (!r.upload_url) {
       throw new Error(JSON.stringify(r));
     }
@@ -139,22 +243,22 @@ async function run(cfg) {
     }
 
     await zip('./' + cfg.staticpath, bundleFile);
-    if (await !fs.pathExists(bundleFile)) {
+    if (!fs.pathExists(bundleFile)) {
     } else {
-      upload(uploadURL, bundleFile).then((r) => {
+      return await upload(uploadURL, bundleFile).then((r) => {
         if (r.version) {
-          console.log('Uploaded version ' + r.version + '!')
+          console.log('Uploaded version ' + r.version + '!');
+          return getQueue(r.version);
         } else {
           console.error('Upload error:', r)
         }
-
       });
     }
 
+    return false;
   } catch (e) {
     console.error('err', e);
   }
-
 }
 
 module.exports = {
