@@ -180,10 +180,12 @@ async function handleQueue(user_id, base_url, key, ts, handled) {
         if (event.code === CODE_DEPLOY) {
           if (event.message && event.message.urls && Object.keys(event.message.urls).length) {
             const urls = event.message.urls;
-            if (event.message.is_production) {
+            if (event.message.is_production && !handled.production) {
               handled.production = true;
               console.info(chalk.green('URLs changed for production:'));
-            } else {
+            }
+
+            if (!event.message.is_production && !handled.dev) {
               handled.dev = true;
               console.info(chalk.green('URLs changed for dev:'));
             }
