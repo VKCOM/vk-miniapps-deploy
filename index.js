@@ -19,12 +19,16 @@ const OAUTH_HOST = cfg.oauth_host || 'https://oauth.vk.com/';
 const API_VERSION = '5.101';
 const DEPLOY_APP_ID = 6670517;
 
+const CLIENT_VERSION = 1;
+
 const APPLICATION_ENV_DEV = 1;
 const APPLICATION_ENV_PRODUCTION = 2;
 
 const CODE_SUCCESS = 200;
 const CODE_DEPLOY = 201;
 const CODE_SKIP = 202;
+const CODE_PUSH_SENT = 203;
+const CODE_PUSH_APPROVED = 204;
 
 const TYPE_SUCCESS = 'success';
 
@@ -81,6 +85,8 @@ async function auth() {
 async function api(method, params) {
   params['v'] = API_VERSION;
   params['access_token'] = cfg.access_token;
+  params['cli_version'] = CLIENT_VERSION;
+
   if (!cfg.access_token) {
     console.error('access_token is missing');
     return false;
@@ -91,7 +97,7 @@ async function api(method, params) {
     const query = await fetch(API_HOST + method + '?' + queryParams);
     const res = await query.json();
     if (res.error !== void 0) {
-      throw new Error(JSON.stringify(res.error));
+      throw new Error(chalk.red(res.error.error_code + ': ' + res.error.error_msg));
     }
 
     if (res.response !== void 0) {
@@ -145,6 +151,16 @@ async function handleQueue(user_id, base_url, key, ts, handled) {
       if (event.type === TYPE_SUCCESS) {
         if (event.code === CODE_SUCCESS) {
           console.info(chalk.green('Deploy success...'));
+          continue;
+        }
+
+        if (event.code === CODE_PUSH_SENT) {
+          console.info(chalk.green('Please, confirm deploy on your phone.'));
+          continue;
+        }
+
+        if (event.code === CODE_PUSH_APPROVED) {
+          console.info(chalk.green('Deploy confirmed successfully.'));
           continue;
         }
 
@@ -257,7 +273,7 @@ async function run(cfg) {
 
     return false;
   } catch (e) {
-    console.error('err', e);
+    console.error(chalk.red('err:', e));
   }
 }
 
