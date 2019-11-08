@@ -1,6 +1,6 @@
-# VK-miniapps-deploy
+# vk-miniapps-deploy
 
-Deploy straight to VK MiniApps hosting with one simple command.
+Deploy straight to VK Mini Apps hosting with one simple command.
 
 ## Usage
 
@@ -40,9 +40,9 @@ To configure `vk-miniapps-deploy` all you need to do is specify a couple of thin
   "static_path": "build",
   "app_id": "...",
   "endpoints": {
-    "mobile": "mobile.html",
-    "mvk": "mvk.html",
-    "web": "web.html"
+    "mobile": "index.html",
+    "mvk": "index.html",
+    "web": "index.html"
   }
 }
 ```
