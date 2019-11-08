@@ -1,5 +1,5 @@
 {
-  "staticpath": "build",
+  "static_path": "build",
   "app_id": "",
   "endpoints": {
     "mvk": "index.html",

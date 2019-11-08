@@ -37,7 +37,7 @@ To configure `vk-miniapps-deploy` all you need to do is specify a couple of thin
 
 ``` JSON
 {
-  "staticpath": "build",
+  "static_path": "build",
   "app_id": "...",
   "endpoints": {
     "mobile": "mobile.html",

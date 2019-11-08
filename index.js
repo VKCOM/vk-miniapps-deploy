@@ -19,7 +19,7 @@ const OAUTH_HOST = cfg.oauth_host || 'https://oauth.vk.com/';
 const API_VERSION = '5.101';
 const DEPLOY_APP_ID = 6670517;
 
-const CLIENT_VERSION = 1;
+const CLIENT_VERSION = 2;
 
 const APPLICATION_ENV_DEV = 1;
 const APPLICATION_ENV_PRODUCTION = 2;
@@ -123,7 +123,7 @@ async function upload(uploadUrl, bundleFile) {
   }
 }
 
-async function handleQueue(user_id, base_url, key, ts, handled) {
+async function handleQueue(user_id, base_url, key, ts, version, handled) {
   const url = base_url + '?act=a_check&key=' + key + '&ts=' + ts + '&id=' + user_id + '&wait=5';
   const query = await fetch(url);
   const res = await query.json();
@@ -200,7 +200,7 @@ async function handleQueue(user_id, base_url, key, ts, handled) {
     }
   }
 
-  return handleQueue(user_id, base_url, key, res.ts, handled);
+  return handleQueue(user_id, base_url, key, res.ts, version, handled);
 }
 
 async function getQueue(version) {
@@ -209,11 +209,12 @@ async function getQueue(version) {
     throw new Error(JSON.stringify(r));
   }
 
-  return handleQueue(r.user_id, r.base_url, r.key, r.ts, false);
+  return handleQueue(r.user_id, r.base_url, r.key, r.ts, version, false);
 }
 
 async function run(cfg) {
   try {
+    const staticPath = cfg.static_path || cfg.staticpath;
     const defaultEnvironment = APPLICATION_ENV_DEV | APPLICATION_ENV_PRODUCTION;
     const environmentMapping = {
       dev: APPLICATION_ENV_DEV,
@@ -245,7 +246,12 @@ async function run(cfg) {
     const endpointPlatformKeys = Object.keys(cfg.endpoints);
     if (endpointPlatformKeys.length) {
       for (let i = 0; i < endpointPlatformKeys.length; i++) {
-        params['endpoint_' + endpointPlatformKeys[i]] = cfg.endpoints[endpointPlatformKeys[i]]
+        let fileName = cfg.endpoints[endpointPlatformKeys[i]];
+        let filePath = './' + staticPath + '/' + fileName;
+        if (!fs.existsSync(filePath)) {
+          throw new Error('File ' + filePath + ' not found');
+        }
+        params['endpoint_' + endpointPlatformKeys[i]] = fileName;
       }
     }
 
@@ -260,22 +266,23 @@ async function run(cfg) {
       fs.removeSync(bundleFile)
     }
 
-    await zip('./' + cfg.staticpath, bundleFile);
+    await zip('./' + staticPath, bundleFile);
     if (!fs.pathExists(bundleFile)) {
-    } else {
-      return await upload(uploadURL, bundleFile).then((r) => {
-        if (r.version) {
-          console.log('Uploaded version ' + r.version + '!');
-          return getQueue(r.version);
-        } else {
-          console.error('Upload error:', r)
-        }
-      });
+      console.error('Empty bundle file: ' + bundleFile);
+      return false;
     }
 
-    return false;
+    return await upload(uploadURL, bundleFile).then((r) => {
+      if (r.version) {
+        console.log('Uploaded version ' + r.version + '!');
+        return getQueue(r.version);
+      } else {
+        console.error('Upload error:', r)
+      }
+    });
+
   } catch (e) {
-    console.error(chalk.red('err:', e));
+    console.error(chalk.red(e));
   }
 }
 
