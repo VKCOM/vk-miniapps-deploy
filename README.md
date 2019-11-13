@@ -1,4 +1,21 @@
-# vk-miniapps-deploy
+<div align="center">
+  <a href="https://github.com/VKCOM">
+    <img width="100" height="100" src="https://avatars3.githubusercontent.com/u/1478241?s=200&v=4">
+  </a>
+  <br>
+  <br>
+
+[![npm][npm]][npm-url]
+[![deps][deps]][deps-url]
+
+[npm]: https://img.shields.io/npm/v/@vkontakte/vk-miniapps-deploy.svg
+[npm-url]: https://npmjs.com/package/@vkontakte/vk-miniapps-deploy
+[deps]: https://img.shields.io/david/vkcom/vk-miniapps-deploy.svg
+[deps-url]: https://david-dm.org/vkcom/vk-miniapps-deploy
+
+</div>
+
+# VK Mini Apps Deploy
 
 Deploy straight to VK Mini Apps hosting with one simple command.
 
