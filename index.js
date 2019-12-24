@@ -27,8 +27,9 @@ const APPLICATION_ENV_PRODUCTION = 2;
 const CODE_SUCCESS = 200;
 const CODE_DEPLOY = 201;
 const CODE_SKIP = 202;
-const CODE_PUSH_SENT = 203;
+const CODE_PUSH_SENT_VIA_PUSH = 203;
 const CODE_PUSH_APPROVED = 204;
+const CODE_CONFIRM_SENT_VIA_MESSAGE = 205;
 
 const TYPE_SUCCESS = 'success';
 
@@ -154,7 +155,28 @@ async function handleQueue(user_id, base_url, key, ts, version, handled) {
           continue;
         }
 
-        if (event.code === CODE_PUSH_SENT) {
+        if (event.code === CODE_CONFIRM_SENT_VIA_MESSAGE) {
+          console.info(chalk.green('Please, confirm deploy on your phone.'));
+          const result = await prompt({
+            type: 'text',
+            name: 'code',
+            message: chalk.yellow('Please, enter code from Administration: ')
+          });
+
+          if (result.code) {
+            const r = await api('apps.confirmDeploy', {
+              app_id: cfg.app_id,
+              version: version,
+              code: result.code
+            });
+            if (r.error) {
+              console.error('Invalid confirm code');
+              return false;
+            }
+          }
+        }
+
+        if (event.code === CODE_PUSH_SENT_VIA_PUSH) {
           console.info(chalk.green('Please, confirm deploy on your phone.'));
           continue;
         }
