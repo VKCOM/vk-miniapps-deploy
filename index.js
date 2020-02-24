@@ -288,7 +288,7 @@ async function run(cfg) {
 
     const excludedFiles = await glob.sync('./' + staticPath + '/**/*.txt');
 
-    excludedFiles.forEach((file) => {
+    await excludedFiles.forEach((file) => {
         fs.removeSync(file);
     });
 
