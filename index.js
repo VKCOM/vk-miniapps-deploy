@@ -6,6 +6,7 @@ const { zip } = require('zip-a-folder');
 const fs = require('fs-extra');
 const FormData = require('form-data');
 const Configstore = require('configstore');
+const glob = require('glob');
 const vault = new Configstore(packageJson.name, {});
 
 var configJSON = require('require-module')('./vk-hosting-config.json');
@@ -284,13 +285,16 @@ async function run(cfg) {
 
     const uploadURL = r.upload_url;
     const bundleFile = './bundle.zip';
-    const licenseFile = './build/static/js/*.txt';
+
+    const excludedFiles = await glob.sync('./' + staticPath + '/**/*.txt');
+
+    excludedFiles.forEach((file) => {
+        fs.removeSync(file);
+        console.log(file);
+    });
+
     if (await fs.pathExists(bundleFile)) {
       fs.removeSync(bundleFile)
-    }
-
-    if (await fs.pathExists(licenseFile)) {
-      fs.removeSync(licenseFile);
     }
 
     await zip('./' + staticPath, bundleFile);
