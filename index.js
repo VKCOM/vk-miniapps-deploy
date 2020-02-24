@@ -284,7 +284,7 @@ async function run(cfg) {
 
     const uploadURL = r.upload_url;
     const bundleFile = './bundle.zip';
-    const licenseFile = './build/static/js/*.LICENSE.txt';
+    const licenseFile = './build/static/js/*.txt';
     if (await fs.pathExists(bundleFile)) {
       fs.removeSync(bundleFile)
     }
