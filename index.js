@@ -290,7 +290,6 @@ async function run(cfg) {
 
     excludedFiles.forEach((file) => {
         fs.removeSync(file);
-        console.log(file);
     });
 
     if (await fs.pathExists(bundleFile)) {
