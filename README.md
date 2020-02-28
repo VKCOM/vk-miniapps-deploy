@@ -1,21 +1,6 @@
-<div align="center">
-  <a href="https://github.com/VKCOM">
-    <img width="100" height="100" src="https://avatars3.githubusercontent.com/u/1478241?s=200&v=4">
-  </a>
-  <br>
-  <br>
+[<img width="134" src="https://vk.com/images/apps/mini_apps/vk_mini_apps_logo.svg">](https://vk.com/services)
 
-[![npm][npm]][npm-url]
-[![deps][deps]][deps-url]
-
-[npm]: https://img.shields.io/npm/v/@vkontakte/vk-miniapps-deploy.svg
-[npm-url]: https://npmjs.com/package/@vkontakte/vk-miniapps-deploy
-[deps]: https://img.shields.io/david/vkcom/vk-miniapps-deploy.svg
-[deps-url]: https://david-dm.org/vkcom/vk-miniapps-deploy
-
-</div>
-
-# VK Mini Apps Deploy
+# VK Mini Apps Deploy [![npm][npm]][npm-url] [![deps][deps]][deps-url]
 
 Deploy straight to VK Mini Apps hosting with one simple command.
 
@@ -78,3 +63,10 @@ $ env MINI_APPS_ACCESS_TOKEN=super_secret_access_token_value yarn deploy
 
 There are two values to specify MINI_APPS_ENVIRONMENT: `production` or `dev`. 
 All production builds will be also deployed on dev environment.  
+
+
+
+[npm]: https://img.shields.io/npm/v/@vkontakte/vk-miniapps-deploy.svg
+[npm-url]: https://npmjs.com/package/@vkontakte/vk-miniapps-deploy
+[deps]: https://img.shields.io/david/vkcom/vk-miniapps-deploy.svg
+[deps-url]: https://david-dm.org/vkcom/vk-miniapps-deploy
