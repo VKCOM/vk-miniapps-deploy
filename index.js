@@ -34,6 +34,32 @@ const CODE_CONFIRM_SENT_VIA_MESSAGE = 205;
 
 const TYPE_SUCCESS = 'success';
 
+const URL_NAMES = {
+  DESKTOP_DEV : 'vk_app_desktop_dev_url',
+  MOBILE_DEV: 'vk_app_dev_url',
+  MOBILE_WEB_DEV: 'vk_mini_app_mvk_dev_url',
+  WEB_LEGACY: 'iframe_url',
+  WEB: 'iframe_secure_url',
+  MOBILE: 'm_iframe_secure_url',
+  MOBILE_WEB: 'vk_mini_app_mvk_url',
+}
+
+const PLATFORMS = {
+  WEB: 'vk.com',
+  MOBILE: 'iOS & Android',
+  MOBILE_WEB: 'm.vk.com',
+};
+
+const URL_NAMES_MAP = {
+  [URL_NAMES.DESKTOP_DEV]: PLATFORMS.WEB,
+  [URL_NAMES.MOBILE_DEV]: PLATFORMS.MOBILE,
+  [URL_NAMES.MOBILE_WEB_DEV]: PLATFORMS.MOBILE_WEB,
+  [URL_NAMES.WEB_LEGACY]: PLATFORMS.WEB,
+  [URL_NAMES.WEB]: PLATFORMS.WEB,
+  [URL_NAMES.MOBILE]: PLATFORMS.MOBILE,
+  [URL_NAMES.MOBILE_WEB]: PLATFORMS.MOBILE_WEB,
+};
+
 async function auth() {
   const get_auth_code = await fetch(OAUTH_HOST + 'get_auth_code?scope=offline&client_id=' + DEPLOY_APP_ID);
   const get_auth_code_res = await get_auth_code.json();
@@ -215,7 +241,7 @@ async function handleQueue(user_id, base_url, key, ts, version, handled) {
 
             let urlKeys = Object.keys(urls);
             for (let j = 0; j < urlKeys.length; j++) {
-              console.log(urlKeys[j] + ':\t' + urls[urlKeys[j]]);
+              console.log(URL_NAMES_MAP[urlKeys[j]] + ':\t' + urls[urlKeys[j]]);
             }
           }
         }
@@ -263,6 +289,10 @@ async function run(cfg) {
       vault.set('access_token', access_token);
       console.log(chalk.cyan('Token is saved in configstore!'));
       console.log(chalk.cyan('\nFor your CI, you can use \n > $ env MINI_APPS_ACCESS_TOKEN=' + access_token + ' yarn deploy'));
+    }
+
+    if (!cfg.app_id) {
+      throw new Error('Please provide "app_id" to vk-hosting-config.json');
     }
 
     const params = {app_id: cfg.app_id, environment: environment};
