@@ -156,6 +156,8 @@ async function handleQueue(user_id, base_url, key, ts, version, handled) {
   const query = await fetch(url);
   const res = await query.json();
 
+  const ciUrls = !!process.env.CI_URLS;
+
   if (handled === false) {
     handled = {
       production: false,
@@ -244,7 +246,7 @@ async function handleQueue(user_id, base_url, key, ts, version, handled) {
               if (urlKeys[j] === URL_NAMES.WEB_LEGACY) {
                 continue;
               }
-              console.log(URL_NAMES_MAP[urlKeys[j]] + ':\t' + urls[urlKeys[j]]);
+              console.log((ciUrls ? urlKeys[j] : URL_NAMES_MAP[urlKeys[j]]) + ':\t' + urls[urlKeys[j]]);
             }
           }
         }

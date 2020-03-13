@@ -62,9 +62,9 @@ $ env MINI_APPS_ACCESS_TOKEN=super_secret_access_token_value yarn deploy
 ```
 
 There are two values to specify MINI_APPS_ENVIRONMENT: `production` or `dev`. 
-All production builds will be also deployed on dev environment.  
+All production builds will be also deployed on dev environment.
 
-
+If you grep URL paths, you can use environment variable `CI_URLS = true`.
 
 [npm]: https://img.shields.io/npm/v/@vkontakte/vk-miniapps-deploy.svg
 [npm-url]: https://npmjs.com/package/@vkontakte/vk-miniapps-deploy
