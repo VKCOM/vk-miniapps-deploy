@@ -84,7 +84,7 @@ async function auth() {
         type: 'confirm',
         name: 'result',
         initial: true,
-        message: chalk.yellow('Please open ', url)
+        message: chalk.yellow('Please open this url in browser', url)
       });
 
       if (!prompt_question.result) {
@@ -241,6 +241,9 @@ async function handleQueue(user_id, base_url, key, ts, version, handled) {
 
             let urlKeys = Object.keys(urls);
             for (let j = 0; j < urlKeys.length; j++) {
+              if (urlKeys[j] === URL_NAMES.WEB_LEGACY) {
+                continue;
+              }
               console.log(URL_NAMES_MAP[urlKeys[j]] + ':\t' + urls[urlKeys[j]]);
             }
           }
@@ -262,6 +265,11 @@ async function getQueue(version) {
 }
 
 async function run(cfg) {
+
+  if (!configJSON) {
+    throw new Error('For deploy you need to create config file "vk-hosting-config.json"');
+  }
+
   try {
     const staticPath = cfg.static_path || cfg.staticpath;
     const defaultEnvironment = APPLICATION_ENV_DEV | APPLICATION_ENV_PRODUCTION;
@@ -287,7 +295,7 @@ async function run(cfg) {
       const access_token = await auth();
       cfg.access_token = access_token;
       vault.set('access_token', access_token);
-      console.log(chalk.cyan('Token is saved in configstore!'));
+      console.log(chalk.cyan('Token is saved in config store!'));
       console.log(chalk.cyan('\nFor your CI, you can use \n > $ env MINI_APPS_ACCESS_TOKEN=' + access_token + ' yarn deploy'));
     }
 

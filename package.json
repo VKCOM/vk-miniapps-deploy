@@ -1,7 +1,7 @@
 {
   "name": "@vkontakte/vk-miniapps-deploy",
-  "version": "0.0.14",
-  "description": "deploy to vk-miniapps hosting with one command",
+  "version": "0.0.15",
+  "description": "Deploy to VK Mini Apps hosting with one simple command",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -11,6 +11,21 @@
   "engines": {
     "node": ">=8.10"
   },
+  "author": {
+    "name": "VK",
+    "url": "https://vk.com"
+  },
+  "contributors": [
+    {
+      "name": "Ilya Egorov",
+      "url": "https://vk.com/mobyman"
+    },
+    {
+      "name": "Gleb Vorontsov",
+      "email": "vorontsov.gleb@gmail.com",
+      "url": "https://vk.com/boy"
+    }
+  ],
   "bin": "./bin/vk-miniapps-deploy",
   "repository": {
     "type": "git",
