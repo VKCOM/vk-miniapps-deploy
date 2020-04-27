@@ -66,6 +66,11 @@ All production builds will be also deployed on dev environment.
 
 If you grep URL paths, you can use environment variable `CI_URLS = true`.
 
+## Troubleshooting:
+If you get error `User authorization failed: invalid session`, try this comand:
+```bash
+rm ~/.config/configstore/@vkontakte/vk-miniapps-deploy.json
+```
 [npm]: https://img.shields.io/npm/v/@vkontakte/vk-miniapps-deploy.svg
 [npm-url]: https://npmjs.com/package/@vkontakte/vk-miniapps-deploy
 [deps]: https://img.shields.io/david/vkcom/vk-miniapps-deploy.svg
