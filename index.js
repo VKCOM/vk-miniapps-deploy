@@ -319,8 +319,8 @@ async function run(cfg) {
     }
 
     const r = await api('apps.getBundleUploadServer', params);
-    if (!r.upload_url) {
-      throw new Error(JSON.stringify(r));
+    if (!r || !r.upload_url) {
+      throw new Error(JSON.stringify('upload_url is undefined', r));
     }
 
     const uploadURL = r.upload_url;
@@ -353,6 +353,7 @@ async function run(cfg) {
 
   } catch (e) {
     console.error(chalk.red(e));
+    process.exit(1);
   }
 }
 
