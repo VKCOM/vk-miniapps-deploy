@@ -58,8 +58,10 @@ To configure `vk-miniapps-deploy` all you need to do is specify a couple of thin
 For your CI, you can use
 
 ```bash
-$ env MINI_APPS_ACCESS_TOKEN=super_secret_access_token_value yarn deploy
+$ env MINI_APPS_ACCESS_TOKEN=<token> yarn deploy
 ```
+
+with *user token* retrieved from vk-miniapps-deploy OR *service token* of deployable application
 
 There are two values to specify MINI_APPS_ENVIRONMENT: `production` or `dev`. 
 All production builds will be also deployed on dev environment.

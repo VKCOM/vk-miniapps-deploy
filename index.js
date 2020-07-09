@@ -17,7 +17,7 @@ prompt.delimiter = "=>".grey;
 const API_HOST = cfg.api_host || 'https://api.vk.com/method/';
 const OAUTH_HOST = cfg.oauth_host || 'https://oauth.vk.com/';
 
-const API_VERSION = '5.101';
+const API_VERSION = '5.131';
 const DEPLOY_APP_ID = 6670517;
 
 const CLIENT_VERSION = 2;
@@ -169,7 +169,7 @@ async function handleQueue(user_id, base_url, key, ts, version, handled) {
     return true;
   }
 
-  if (res.events.length) {
+  if (res.events !== void 0 && res.events.length) {
     for (let i = 0; i < res.events.length; i++) {
       let event = res.events[i].data;
       if (event.type === 'error') {
@@ -259,11 +259,11 @@ async function handleQueue(user_id, base_url, key, ts, version, handled) {
 
 async function getQueue(version) {
   const r = await api('apps.subscribeToHostingQueue', {app_id: cfg.app_id, version: version});
-  if (!r.base_url || !r.key || !r.ts || !r.user_id) {
+  if (!r.base_url || !r.key || !r.ts || !r.app_id) {
     throw new Error(JSON.stringify(r));
   }
 
-  return handleQueue(r.user_id, r.base_url, r.key, r.ts, version, false);
+  return handleQueue(r.app_id, r.base_url, r.key, r.ts, version, false);
 }
 
 async function run(cfg) {
