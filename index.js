@@ -309,12 +309,14 @@ async function run(cfg) {
     const endpointPlatformKeys = Object.keys(cfg.endpoints);
     if (endpointPlatformKeys.length) {
       for (let i = 0; i < endpointPlatformKeys.length; i++) {
-        let fileName = cfg.endpoints[endpointPlatformKeys[i]];
-        let filePath = './' + staticPath + '/' + fileName;
+        let endpoint = cfg.endpoints[endpointPlatformKeys[i]];
+        let fileName = new URL(`/${endpoint}`, 'https://.').pathname;
+        let filePath = './' + staticPath + fileName;
+
         if (!fs.existsSync(filePath)) {
           throw new Error('File ' + filePath + ' not found');
         }
-        params['endpoint_' + endpointPlatformKeys[i]] = fileName;
+        params['endpoint_' + endpointPlatformKeys[i]] = endpoint;
       }
     }
 
