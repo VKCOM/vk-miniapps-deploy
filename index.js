@@ -301,8 +301,16 @@ async function run(cfg) {
       console.log(chalk.cyan('\nFor your CI, you can use \n > $ env MINI_APPS_ACCESS_TOKEN=' + access_token + ' yarn deploy'));
     }
 
+    if (process.env.MINI_APPS_APP_ID) {
+      const appId = parseInt(process.env.MINI_APPS_APP_ID, 10);
+      if (isNaN(appId)) {
+        throw new Error('env MINI_APPS_APP_ID is not valid number');
+      }
+      cfg.app_id = appId;
+    }
+
     if (!cfg.app_id) {
-      throw new Error('Please provide "app_id" to vk-hosting-config.json');
+      throw new Error('Please provide "app_id" to vk-hosting-config.json or env MINI_APPS_APP_ID');
     }
 
     const params = {app_id: cfg.app_id, environment: environment};
