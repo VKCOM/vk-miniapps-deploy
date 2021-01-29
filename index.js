@@ -246,7 +246,21 @@ async function handleQueue(user_id, base_url, key, ts, version, handled) {
               if (urlKeys[j] === URL_NAMES.WEB_LEGACY) {
                 continue;
               }
-              console.log((ciUrls ? urlKeys[j] : URL_NAMES_MAP[urlKeys[j]]) + ':\t' + urls[urlKeys[j]]);
+
+              let prefix = null;
+              if (ciUrls) {
+                prefix = urlKeys[j];
+              } else {
+                prefix = URL_NAMES_MAP[urlKeys[j]];
+              }
+
+              if (prefix) {
+                prefix += ':\t';
+              } else {
+                prefix = '';
+              }
+
+              console.log(prefix + urls[urlKeys[j]]);
             }
           }
         }
@@ -319,7 +333,7 @@ async function run(cfg) {
       for (let i = 0; i < endpointPlatformKeys.length; i++) {
         let endpoint = cfg.endpoints[endpointPlatformKeys[i]];
         let fileName = new URL(`/${endpoint}`, 'https://.').pathname;
-        let filePath = './' + staticPath + fileName;
+        let filePath = process.cwd() + '/' + fileName;
 
         if (!fs.existsSync(filePath)) {
           throw new Error('File ' + filePath + ' not found');
@@ -334,19 +348,23 @@ async function run(cfg) {
     }
 
     const uploadURL = r.upload_url;
-    const bundleFile = './bundle.zip';
+    const bundleFile = cfg.bundleFile || './build/build.zip';
 
-    const excludedFiles = await glob.sync('./' + staticPath + '/**/*.txt');
+    if (!cfg.bundleFile) {
+      const excludedFiles = await glob.sync('./' + staticPath + '/**/*.txt');
 
-    await excludedFiles.forEach((file) => {
+      await excludedFiles.forEach((file) => {
         fs.removeSync(file);
-    });
+      });
 
-    if (await fs.pathExists(bundleFile)) {
-      fs.removeSync(bundleFile)
+      if (await fs.pathExists(bundleFile)) {
+        fs.removeSync(bundleFile)
+      }
+
+
+      await zip('./' + staticPath, bundleFile);
     }
 
-    await zip('./' + staticPath, bundleFile);
     if (!fs.pathExists(bundleFile)) {
       console.error('Empty bundle file: ' + bundleFile);
       return false;
