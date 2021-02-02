@@ -333,7 +333,7 @@ async function run(cfg) {
       for (let i = 0; i < endpointPlatformKeys.length; i++) {
         let endpoint = cfg.endpoints[endpointPlatformKeys[i]];
         let fileName = new URL(`/${endpoint}`, 'https://.').pathname;
-        let filePath = process.cwd() + '/' + fileName;
+        let filePath = './' + staticPath + fileName;
 
         if (!fs.existsSync(filePath)) {
           throw new Error('File ' + filePath + ' not found');
