@@ -348,7 +348,7 @@ async function run(cfg) {
     }
 
     const uploadURL = r.upload_url;
-    const bundleFile = cfg.bundleFile || './build/build.zip';
+    const bundleFile = cfg.bundleFile || './build.zip';
 
     if (!cfg.bundleFile) {
       const excludedFiles = await glob.sync('./' + staticPath + '/**/*.txt');
