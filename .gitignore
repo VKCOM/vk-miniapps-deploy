@@ -3,3 +3,6 @@ node_modules/
 build/
 bundle.zip
 vk-hosting-config.json
+*.log
+*.lock
+*-lock.json
