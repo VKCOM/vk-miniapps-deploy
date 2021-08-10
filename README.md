@@ -55,10 +55,16 @@ To configure `vk-miniapps-deploy` all you need to do is specify a couple of thin
   and remove the suffix «.example»
 * Run yarn deploy
 
-For your CI, you can use
+CI/CD is automatically detected, you only need to pass `access_token` to env or define in config:
 
 ```bash
-$ env MINI_APPS_ACCESS_TOKEN=<token> yarn deploy
+$ cross-env MINI_APPS_ACCESS_TOKEN=<token> yarn deploy
+```
+or
+```json
+{
+  "access_token": "<token>"
+}
 ```
 
 with *user token* retrieved from vk-miniapps-deploy OR *service token* of deployable application
@@ -67,6 +73,13 @@ There are two values to specify MINI_APPS_ENVIRONMENT: `production` or `dev`.
 All production builds will be also deployed on dev environment.
 
 If you grep URL paths, you can use environment variable `CI_URLS = true`.
+
+If you always need to run in CI/CD-mode, in config:
+```json
+{
+  "noprompt": true
+}
+```
 
 ## Troubleshooting:
 If you get an error `User authorization failed: invalid session`, try this comand:
