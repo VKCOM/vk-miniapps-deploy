@@ -17,6 +17,10 @@
   },
   "contributors": [
     {
+      "name": "Anton Petrov",
+      "url": "https://vk.com/petrov.engineer"
+    },
+    {
       "name": "Ilya Egorov",
       "url": "https://vk.com/mobyman"
     },
@@ -41,6 +45,7 @@
     "is-ci": "^3.0.0",
     "node-fetch": "^2.6.1",
     "prompts": "^2.4.1",
+    "terminal-link": "^2.1.1",
     "zip-a-folder": "0.0.12"
   },
   "devDependencies": {

@@ -50,6 +50,7 @@ To configure `vk-miniapps-deploy` all you need to do is specify a couple of thin
 ```
 
 ## How to use:
+
 * Make sure that in package.json the key value «homepage» is «./»
 * Copy the example config to the root folder of your application vk-hosting-config.json.example
   and remove the suffix «.example»
@@ -82,10 +83,13 @@ If you always need to run in CI/CD-mode, in config:
 ```
 
 ## Troubleshooting:
-If you get an error `User authorization failed: invalid session`, try this comand:
+
+If you get an error `Access key is invalid`, try this comand:
+
 ```bash
 rm ~/.config/configstore/@vkontakte/vk-miniapps-deploy.json
 ```
+
 [npm]: https://img.shields.io/npm/v/@vkontakte/vk-miniapps-deploy.svg
 [npm-url]: https://npmjs.com/package/@vkontakte/vk-miniapps-deploy
 [deps]: https://img.shields.io/david/vkcom/vk-miniapps-deploy.svg
