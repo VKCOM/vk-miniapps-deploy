@@ -3,10 +3,6 @@
   "version": "0.0.26",
   "description": "Deploy to VK Mini Apps hosting with one simple command",
   "main": "index.js",
-  "scripts": {
-    "start": "./bin/vk-miniapps-deploy",
-    "deploy": "./bin/vk-miniapps-deploy"
-  },
   "license": "MIT",
   "engines": {
     "node": ">=10.17"
