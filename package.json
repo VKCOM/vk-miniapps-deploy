@@ -36,6 +36,7 @@
   "dependencies": {
     "chalk": "~4.1.2",
     "configstore": "~5.0.1",
+    "fast-glob": "^3.2.11",
     "fetch-blob": "^3.1.4",
     "form-data-encoder": "^1.7.1",
     "formdata-node": "^4.3.2",
