@@ -74,6 +74,10 @@ There are two values to specify MINI_APPS_ENVIRONMENT: `production` or `dev`.
 All production builds will be also deployed on dev environment.
 
 If you grep URL paths, you can use environment variable `CI_URLS = true`.
+URLs will be printed as followed structure:
+```shell
+
+```
 
 If you always need to run in CI/CD-mode, in config:
 ```json
@@ -84,7 +88,7 @@ If you always need to run in CI/CD-mode, in config:
 
 ## Troubleshooting:
 
-If you get an error `Access key is invalid`, try this comand:
+If you get an error `Access token is invalid`, try this comand:
 
 ```bash
 rm ~/.config/configstore/@vkontakte/vk-miniapps-deploy.json
