@@ -1,21 +1,22 @@
 {
   "name": "@vkontakte/vk-miniapps-deploy",
-  "version": "0.0.25",
+  "version": "0.1.0",
   "description": "Deploy to VK Mini Apps hosting with one simple command",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "./bin/vk-miniapps-deploy"
-  },
+  "type": "commonjs",
   "license": "MIT",
   "engines": {
-    "node": ">=8.10"
+    "node": ">=10.17"
   },
   "author": {
     "name": "VK",
     "url": "https://vk.com"
   },
   "contributors": [
+    {
+      "name": "Anton Petrov",
+      "url": "https://vk.com/petrov.engineer"
+    },
     {
       "name": "Ilya Egorov",
       "url": "https://vk.com/mobyman"
@@ -33,15 +34,21 @@
   },
   "homepage": "https://github.com/vkcom/vk-miniapps-deploy",
   "dependencies": {
-    "async": "^3.2.0",
-    "chalk": "^3.0.0",
-    "configstore": "^5.0.0",
-    "form-data": "^3.0.0",
-    "fs-extra": "^8.0.1",
-    "glob": "^7.1.6",
-    "node-fetch": "^2.6.0",
-    "prompts": "^2.1.0",
-    "require-module": "^0.1.0",
-    "zip-a-folder": "0.0.12"
+    "chalk": "~4.1.2",
+    "configstore": "~5.0.1",
+    "fast-glob": "^3.2.11",
+    "fetch-blob": "^3.1.4",
+    "form-data-encoder": "^1.7.1",
+    "formdata-node": "^4.3.2",
+    "is-ci": "^3.0.1",
+    "node-fetch": "~2.6.7",
+    "prompts": "^2.4.2",
+    "terminal-link": "~2.1.1",
+    "zip-a-folder": "~0.0.12"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.16",
+    "@vkontakte/eslint-config": "^3.1.0",
+    "eslint": "^7.32.0"
   }
 }

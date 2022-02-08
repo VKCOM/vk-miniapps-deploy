@@ -50,15 +50,16 @@ To configure `vk-miniapps-deploy` all you need to do is specify a couple of thin
 ```
 
 ## How to use:
+
 * Make sure that in package.json the key value «homepage» is «./»
 * Copy the example config to the root folder of your application vk-hosting-config.json.example
   and remove the suffix «.example»
 * Run yarn deploy
 
-For your CI, you can use
+CI/CD is automatically detected, you only need to pass `access_token` to env:
 
 ```bash
-$ env MINI_APPS_ACCESS_TOKEN=<token> yarn deploy
+$ cross-env MINI_APPS_ACCESS_TOKEN=<token> yarn deploy
 ```
 
 with *user token* retrieved from vk-miniapps-deploy OR *service token* of deployable application
@@ -67,12 +68,38 @@ There are two values to specify MINI_APPS_ENVIRONMENT: `production` or `dev`.
 All production builds will be also deployed on dev environment.
 
 If you grep URL paths, you can use environment variable `CI_URLS = true`.
+URLs will be printed as followed structure (⇆ is tab character):
+
+```md
+# development
+vk_app_desktop_dev_url:⇆url
+vk_app_dev_url:⇆url
+vk_mini_app_mvk_dev_url:⇆url
+
+# production
+iframe_secure_url:⇆url
+m_iframe_secure_url:⇆url
+vk_mini_app_mvk_url:⇆url
+```
+
+> See [URL_NAMES](./lib/deploy.js#L8) for more information.
+
+If you always need to run in CI/CD-mode, in config:
+
+```json
+{
+  "noprompt": true
+}
+```
 
 ## Troubleshooting:
-If you get an error `User authorization failed: invalid session`, try this comand:
+
+If you get an error `Access token is invalid`, try this comand:
+
 ```bash
 rm ~/.config/configstore/@vkontakte/vk-miniapps-deploy.json
 ```
+
 [npm]: https://img.shields.io/npm/v/@vkontakte/vk-miniapps-deploy.svg
 [npm-url]: https://npmjs.com/package/@vkontakte/vk-miniapps-deploy
 [deps]: https://img.shields.io/david/vkcom/vk-miniapps-deploy.svg
