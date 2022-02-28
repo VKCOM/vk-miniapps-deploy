@@ -26,23 +26,27 @@ async function run() {
     return false;
   }
 
-  if (cfg.noprompt) {
-    deploy.run(cfg);
-  } else {
+  let confirmation = {
+    result: true,
+  }
+
+  if (!cfg.noprompt) {
     prompt.message = chalk.cyan("vk-mini-apps-deploy:");
     prompt.delimiter = chalk.green(" $ ");
 
-    const result = await prompt({
+    confirmation = await prompt({
       type: 'confirm',
       initial: true,
       name: 'result',
       message: chalk.yellow('Would you like to deploy to VK Mini Apps hosting using these commands?')
     });
-
-    if (result.result) {
-      const status = await deploy.run(cfg) ? 0 : 1;
-      process.exit(status);
-    }
   }
+
+  if (confirmation.result) {
+    const status = await deploy.run(cfg) ? 0 : 1;
+    process.exit(status);
+  }
+
+  process.exit();
 }
 run().then(r => console.log(r));
