@@ -43,8 +43,11 @@ async function run() {
   }
 
   if (confirmation.result) {
-    const status = await deploy.run(cfg) ? 0 : 1;
-    process.exit(status);
+    await deploy.run(cfg).then((res)=>{
+      const status = Number(!Boolean(res))
+      process.exit(status);
+    }) 
+    
   }
 
   process.exit();
