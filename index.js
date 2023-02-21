@@ -376,6 +376,7 @@ async function run(cfg) {
         return getQueue(r.version);
       } else {
         console.error('Upload error:', r)
+        process.exit(1);
       }
     });
 
