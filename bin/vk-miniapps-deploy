@@ -5,12 +5,12 @@ const configFilePath = './vk-hosting-config.json';
 const prompt = require('prompts');
 
 async function run() {
-  if (fs.pathExists(configFilePath).then((res) => {
+  fs.pathExists(configFilePath).then((res) => {
     if (!res) {
       console.error(configFilePath + ' is missing');
       return false;
     }
-  })) ;
+  });
 
   const configJSON = require('require-module')(configFilePath);
   if (!configJSON) {
@@ -20,11 +20,6 @@ async function run() {
 
   const deploy = require('../index');
   const cfg = configJSON || {};
-
-  if (!cfg) {
-    console.error('vk-hosting-config.json is missing');
-    return false;
-  }
 
   let confirmation = {
     result: true,
@@ -43,10 +38,54 @@ async function run() {
   }
 
   if (confirmation.result) {
+    const extraOptions = await getExtraOptions()
+    cfg.update_prod = extraOptions.update_prod;
+    cfg.update_dev = extraOptions.update_dev;
+
+    if (extraOptions.update_test === true && extraOptions.test_group_name !== '') {
+      cfg.test_group_name = extraOptions.test_group_name;
+    }
+
     const status = await deploy.run(cfg) ? 0 : 1;
     process.exit(status);
   }
 
   process.exit();
+}
+
+async function getExtraOptions() {
+  const questions = [
+    {
+      type: 'confirm',
+      initial: true,
+      name: 'update_prod',
+      message: chalk.yellow('Would you like to update prod urls?')
+    },
+    {
+      type: 'confirm',
+      initial: true,
+      name: 'update_dev',
+      message: chalk.yellow('Would you like to update dev urls?')
+    },
+    {
+      type: 'confirm',
+      initial: false,
+      name: 'update_test',
+      message: chalk.yellow('Would you like to update test group url?')
+    },
+    {
+      type: prev => prev === true ? 'text' : null,
+      name: 'test_group_name',
+      message: chalk.yellow('Enter test group name:')
+    }
+  ];
+
+  const extraOptions = await prompt(questions);
+
+  if (extraOptions.update_prod === false && extraOptions.update_dev === false && extraOptions.update_test === false) {
+    process.exit();
+  }
+
+  return extraOptions;
 }
 run().then(r => console.log(r));

@@ -31,6 +31,9 @@ const CODE_SKIP = 202;
 const CODE_PUSH_SENT_VIA_PUSH = 203;
 const CODE_PUSH_APPROVED = 204;
 const CODE_CONFIRM_SENT_VIA_MESSAGE = 205;
+const CODE_UPDATE_TEST_GROUP_URL = 206;
+
+const ERROR_TEST_GROUP_UPDATE = 109;
 
 const TYPE_SUCCESS = 'success';
 
@@ -151,7 +154,7 @@ async function upload(uploadUrl, bundleFile) {
   }
 }
 
-async function handleQueue(user_id, base_url, key, ts, version, handled) {
+async function handleQueue(user_id, base_url, key, ts, version, handled, cfg) {
   const url = base_url + '?act=a_check&key=' + key + '&ts=' + ts + '&id=' + user_id + '&wait=5';
   const query = await fetch(url);
   const res = await query.json();
@@ -174,6 +177,12 @@ async function handleQueue(user_id, base_url, key, ts, version, handled) {
       let event = res.events[i].data;
       if (event.type === 'error') {
         const message = event.message || '';
+
+        if (event.code === ERROR_TEST_GROUP_UPDATE) {
+          console.error(chalk.red('Test group url update error'));
+          continue;
+        }
+
         console.error(chalk.red('Deploy failed, error code: #' + event.code + ' ' + message));
         return false;
       }
@@ -216,7 +225,7 @@ async function handleQueue(user_id, base_url, key, ts, version, handled) {
         }
 
         if (event.code === CODE_SKIP) {
-          switch (event.message.environment) {
+          switch (parseInt(event.message.environment)) {
             case APPLICATION_ENV_DEV:
               handled.dev = true;
               break;
@@ -264,20 +273,27 @@ async function handleQueue(user_id, base_url, key, ts, version, handled) {
             }
           }
         }
+
+        if (event.code === CODE_UPDATE_TEST_GROUP_URL) {
+          if (event.message && event.message.url) {
+            console.info(chalk.green('URL changed for test group "' + cfg.test_group_name + '":'));
+            console.info(event.message.url)
+          }
+        }
       }
     }
   }
 
-  return handleQueue(user_id, base_url, key, res.ts, version, handled);
+  return handleQueue(user_id, base_url, key, res.ts, version, handled, cfg);
 }
 
-async function getQueue(version) {
+async function getQueue(version, cfg) {
   const r = await api('apps.subscribeToHostingQueue', {app_id: cfg.app_id, version: version});
   if (!r.base_url || !r.key || !r.ts || !r.app_id) {
     throw new Error(JSON.stringify(r));
   }
 
-  return handleQueue(r.app_id, r.base_url, r.key, r.ts, version, false);
+  return handleQueue(r.app_id, r.base_url, r.key, r.ts, version, false, cfg);
 }
 
 async function run(cfg) {
@@ -327,7 +343,17 @@ async function run(cfg) {
       throw new Error('Please provide "app_id" to vk-hosting-config.json or env MINI_APPS_APP_ID');
     }
 
-    const params = {app_id: cfg.app_id, environment: environment};
+    const params = {
+      app_id: cfg.app_id,
+      environment: environment,
+      update_prod: + cfg.update_prod,
+      update_dev: + cfg.update_dev
+    };
+
+    if ('test_group_name' in cfg) {
+      params.test_group_name = cfg.test_group_name
+    }
+
     const endpointPlatformKeys = Object.keys(cfg.endpoints);
     if (endpointPlatformKeys.length) {
       for (let i = 0; i < endpointPlatformKeys.length; i++) {
@@ -373,7 +399,7 @@ async function run(cfg) {
     return await upload(uploadURL, bundleFile).then((r) => {
       if (r.version) {
         console.log('Uploaded version ' + r.version + '!');
-        return getQueue(r.version);
+        return getQueue(r.version, cfg);
       } else {
         console.error('Upload error:', r)
         process.exit(1);
