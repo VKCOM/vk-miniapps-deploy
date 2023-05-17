@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "./bin/vk-miniapps-deploy",
-    "publish": "npm publish --access=public"
+    "deploy": "./bin/vk-miniapps-deploy"
   },
   "license": "MIT",
   "engines": {
