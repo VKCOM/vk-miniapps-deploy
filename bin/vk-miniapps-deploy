@@ -35,9 +35,11 @@ async function run() {
       name: 'result',
       message: chalk.yellow('Would you like to deploy to VK Mini Apps hosting using these commands?')
     });
-  }
 
-  if (confirmation.result) {
+    if (!confirmation.result) {
+      process.exit();
+    }
+
     const extraOptions = await getExtraOptions()
     cfg.update_prod = extraOptions.update_prod;
     cfg.update_dev = extraOptions.update_dev;
@@ -45,12 +47,10 @@ async function run() {
     if (extraOptions.update_test === true && extraOptions.test_group_name !== '') {
       cfg.test_group_name = extraOptions.test_group_name;
     }
-
-    const status = await deploy.run(cfg) ? 0 : 1;
-    process.exit(status);
   }
 
-  process.exit();
+  const status = await deploy.run(cfg) ? 0 : 1;
+  process.exit(status);
 }
 
 async function getExtraOptions() {
