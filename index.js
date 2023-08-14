@@ -1,7 +1,8 @@
+const crypto = require('crypto');
 const packageJson = require('./package.json');
 const chalk = require('chalk');
 const prompt = require('prompts');
-const fetch = require('node-fetch');
+const nodeFetch = require('node-fetch');
 const { zip } = require('zip-a-folder');
 const fs = require('fs-extra');
 const FormData = require('form-data');
@@ -13,6 +14,8 @@ var configJSON = require('require-module')('./vk-hosting-config.json');
 var cfg = configJSON || {};
 prompt.message = "vk-mini-apps-deploy".grey;
 prompt.delimiter = "=>".grey;
+
+const DEBUG_MODE = !!cfg.debug;
 
 const API_HOST = cfg.api_host || 'https://api.vk.com/method/';
 const OAUTH_HOST = cfg.oauth_host || 'https://oauth.vk.com/';
@@ -62,6 +65,41 @@ const URL_NAMES_MAP = {
   [URL_NAMES.MOBILE]: PLATFORMS.MOBILE,
   [URL_NAMES.MOBILE_WEB]: PLATFORMS.MOBILE_WEB,
 };
+
+function getTraceId() {
+  return crypto.randomBytes(4).toString("hex");
+}
+
+/**
+ * @param {nodeFetch.RequestInfo} url 
+ * @param {nodeFetch.RequestInit} options
+ * @returns {Promise<nodeFetch.Response>}
+ */
+async function fetch(url, options) {
+  if (!DEBUG_MODE) {
+    return nodeFetch(url, options);
+  }
+
+  const traceId = chalk.hex(`#${(Math.random() * 0xFFFFFF << 0).toString(16)}`)(getTraceId());
+  const logLine = (line, type) => console.log(`[${traceId}][${type}]`, chalk.cyan(line));
+  const logError = (error) => console.error(`[${traceId}][ERROR]`, chalk.red(error));
+
+  try {
+    logLine(url, 'REQ');
+    options && logLine(JSON.stringify(options), 'REQ');
+
+    const response = await nodeFetch(url, options);
+    const body = await response.clone().text();
+
+    logLine(`${response.status} ${response.statusText}`, 'RESP');
+    logLine(body, 'RESP');
+
+    return response
+  } catch (e) {
+    logError(e);
+    throw e;
+  }
+}
 
 async function auth() {
   const get_auth_code = await fetch(OAUTH_HOST + 'get_auth_code?scope=offline&client_id=' + DEPLOY_APP_ID);
