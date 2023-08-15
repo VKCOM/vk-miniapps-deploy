@@ -21,6 +21,10 @@ async function run() {
   const deploy = require('../index');
   const cfg = configJSON || {};
 
+  if (cfg.debug) {
+    console.log('\nDebug mode is enabled. It will log all client requests!\n');
+  }
+
   let confirmation = {
     result: true,
   }
