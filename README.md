@@ -1,6 +1,6 @@
-[<img width="134" src="https://vk.com/images/apps/mini_apps/vk_mini_apps_logo.svg">](https://vk.com/services)
+[<img width="134" src="https://sun9-30.userapi.com/IMLu3sXowImUG-VtL34AqHT4qIUBapkCO0dyhA/bz55lWspvOk.svg">](https://vk.com/services)
 
-# VK Mini Apps Deploy [![npm][npm]][npm-url] [![deps][deps]][deps-url]
+# VK Mini Apps Deploy [![npm][npm]][npm-url]
 
 Deploy straight to VK Mini Apps hosting with one simple command.
 
@@ -35,9 +35,9 @@ And now you can run `npm run deploy` to run the `vk-miniapps-deploy` installed i
 
 ## Options
 
-To configure `vk-miniapps-deploy` all you need to do is specify a couple of things in your `vk-hosting-config.json` 
+To configure `vk-miniapps-deploy` all you need to do is specify a couple of things in your `vk-hosting-config.json`
 
-``` JSON
+```JSON
 {
   "static_path": "build",
   "app_id": "...",
@@ -50,10 +50,11 @@ To configure `vk-miniapps-deploy` all you need to do is specify a couple of thin
 ```
 
 ## How to use:
-* Make sure that in package.json the key value «homepage» is «./»
-* Copy the example config to the root folder of your application vk-hosting-config.json.example
+
+- Make sure that in package.json the key value «homepage» is «./»
+- Copy the example config to the root folder of your application vk-hosting-config.json.example
   and remove the suffix «.example»
-* Run yarn deploy
+- Run yarn deploy
 
 For your CI, you can use
 
@@ -61,19 +62,20 @@ For your CI, you can use
 $ env MINI_APPS_ACCESS_TOKEN=<token> yarn deploy
 ```
 
-with *user token* retrieved from vk-miniapps-deploy OR *service token* of deployable application
+with _user token_ retrieved from vk-miniapps-deploy OR _service token_ of deployable application
 
-There are two values to specify MINI_APPS_ENVIRONMENT: `production` or `dev`. 
+There are two values to specify MINI_APPS_ENVIRONMENT: `production` or `dev`.
 All production builds will be also deployed on dev environment.
 
 If you grep URL paths, you can use environment variable `CI_URLS = true`.
 
 ## Troubleshooting:
+
 If you get an error `User authorization failed: invalid session`, try this comand:
+
 ```bash
 rm ~/.config/configstore/@vkontakte/vk-miniapps-deploy.json
 ```
+
 [npm]: https://img.shields.io/npm/v/@vkontakte/vk-miniapps-deploy.svg
 [npm-url]: https://npmjs.com/package/@vkontakte/vk-miniapps-deploy
-[deps]: https://img.shields.io/david/vkcom/vk-miniapps-deploy.svg
-[deps-url]: https://david-dm.org/vkcom/vk-miniapps-deploy
