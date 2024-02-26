@@ -391,6 +391,9 @@ async function run(cfg) {
     if ('test_group_name' in cfg) {
       params.test_group_name = cfg.test_group_name
     }
+    if ('odr_runtime' in cfg && cfg.odr_runtime !== '') {
+      params.odr_runtime = cfg.odr_runtime;
+    }
 
     const endpointPlatformKeys = Object.keys(cfg.endpoints);
     if (endpointPlatformKeys.length) {
