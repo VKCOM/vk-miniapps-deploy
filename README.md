@@ -79,3 +79,5 @@ rm ~/.config/configstore/@vkontakte/vk-miniapps-deploy.json
 
 [npm]: https://img.shields.io/npm/v/@vkontakte/vk-miniapps-deploy.svg
 [npm-url]: https://npmjs.com/package/@vkontakte/vk-miniapps-deploy
+
+# test
