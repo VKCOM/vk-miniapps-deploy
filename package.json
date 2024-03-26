@@ -38,7 +38,6 @@
     "configstore": "^5.0.0",
     "form-data": "^3.0.0",
     "fs-extra": "^8.0.1",
-    "glob": "^7.1.6",
     "node-fetch": "^2.6.0",
     "prompts": "^2.1.0",
     "require-module": "^0.1.0",
