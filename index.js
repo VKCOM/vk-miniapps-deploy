@@ -100,8 +100,13 @@ async function fetch(url, options) {
   }
 }
 
-async function auth() {
-  const get_auth_code = await fetch(OAUTH_HOST + 'get_auth_code?scope=offline&client_id=' + DEPLOY_APP_ID);
+/**
+ * @param {number} app_id
+ * @returns {Promise<{access_token: string, expires_in: string}>}
+ */
+async function auth(app_id) {
+  const get_auth_code_url = `${OAUTH_HOST}get_auth_code?scope=offline&client_id=${DEPLOY_APP_ID}`;
+  const get_auth_code = await fetch(get_auth_code_url);
   const get_auth_code_res = await get_auth_code.json();
 
   if (get_auth_code_res.error !== void 0) {
@@ -131,7 +136,8 @@ async function auth() {
         return Promise.reject("empty response " + prompt_question.result);
       }
 
-      const code_auth_token = await fetch(OAUTH_HOST + 'code_auth_token?device_id=' + device_id + '&client_id=' + DEPLOY_APP_ID);
+      const code_auth_token_url = `${OAUTH_HOST}code_auth_token?device_id=${device_id}&client_id=${DEPLOY_APP_ID}`;
+      const code_auth_token = await fetch(code_auth_token_url);
       const code_auth_token_json = await code_auth_token.json();
 
       if (code_auth_token.status !== CODE_SUCCESS) {
@@ -139,12 +145,14 @@ async function auth() {
         continue;
       }
 
-      const {access_token} = code_auth_token_json;
+      const {access_token, expires_in} = code_auth_token_json;
       if (access_token || access_token === null) {
         handled = true;
       }
-
-      return Promise.resolve(access_token);
+      return Promise.resolve({
+        access_token,
+        expires_in,
+      });
 
     } while (handled === false);
   }
@@ -351,23 +359,6 @@ async function run(cfg) {
       ? (environmentMapping[process.env.MINI_APPS_ENVIRONMENT] || defaultEnvironment)
       : defaultEnvironment;
 
-    if (process.env.MINI_APPS_ACCESS_TOKEN) {
-      cfg.access_token = process.env.MINI_APPS_ACCESS_TOKEN;
-    }
-
-    if (!cfg.access_token && vault.get('access_token')) {
-      cfg.access_token = vault.get('access_token');
-    }
-
-    if (!cfg.access_token) {
-      console.log('Try to retrieve access token...');
-      const access_token = await auth();
-      cfg.access_token = access_token;
-      vault.set('access_token', access_token);
-      console.log(chalk.cyan('Token is saved in config store!'));
-      console.log(chalk.cyan('\nFor your CI, you can use \n > $ env MINI_APPS_ACCESS_TOKEN=' + access_token + ' yarn deploy'));
-    }
-
     if (process.env.MINI_APPS_APP_ID) {
       const appId = parseInt(process.env.MINI_APPS_APP_ID, 10);
       if (isNaN(appId)) {
@@ -378,6 +369,25 @@ async function run(cfg) {
 
     if (!cfg.app_id) {
       throw new Error('Please provide "app_id" to vk-hosting-config.json or env MINI_APPS_APP_ID');
+    }
+
+    if (process.env.MINI_APPS_ACCESS_TOKEN) {
+      cfg.access_token = process.env.MINI_APPS_ACCESS_TOKEN;
+    }
+
+    if (!cfg.access_token && vault.get('access_token')) {
+      cfg.access_token = vault.get('access_token');
+      cfg.expires_in = vault.get('expires_in') || 0;
+    }
+
+    if (!cfg.access_token || (cfg.expires_in > 0 && cfg.expires_in * 1000 < Date.now())) {
+      console.log('Try to retrieve access token...');
+      const { access_token, expires_in } = await auth(cfg.app_id);
+      cfg.access_token = access_token;
+      vault.set('access_token', access_token);
+      vault.set('expires_in', expires_in);
+      console.log(chalk.cyan('Token is saved in config store!'));
+      console.log(chalk.cyan('\nFor your CI, you can use \n > $ env MINI_APPS_ACCESS_TOKEN=' + access_token + ' yarn deploy'));
     }
 
     const params = {
