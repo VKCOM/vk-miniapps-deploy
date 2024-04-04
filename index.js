@@ -121,7 +121,7 @@ async function auth(app_id) {
   if (get_auth_code_res.auth_code) {
     const {auth_code, device_id} = get_auth_code_res;
 
-    const url = OAUTH_HOST + 'code_auth?stage=check&code=' + auth_code;
+    const code_auth_url = `${OAUTH_HOST}code_auth?stage=check&code=${auth_code}&revoke=1`;
 
     let handled = false;
     do {
@@ -129,7 +129,7 @@ async function auth(app_id) {
         type: 'confirm',
         name: 'result',
         initial: true,
-        message: chalk.yellow('Please open this url in browser', url)
+        message: chalk.yellow('Please open this url in browser', code_auth_url)
       });
 
       if (!prompt_question.result) {
