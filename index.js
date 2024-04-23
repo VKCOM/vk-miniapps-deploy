@@ -105,7 +105,7 @@ async function fetch(url, options) {
  * @returns {Promise<{access_token: string, expires_in: string}>}
  */
 async function auth(app_id) {
-  const get_auth_code_url = `${OAUTH_HOST}get_auth_code?scope=offline&client_id=${DEPLOY_APP_ID}`;
+  const get_auth_code_url = `${OAUTH_HOST}get_auth_code?scope=offline&client_id=${DEPLOY_APP_ID}&mini_app_id=${app_id}`;
   const get_auth_code = await fetch(get_auth_code_url);
   const get_auth_code_res = await get_auth_code.json();
 
@@ -136,7 +136,7 @@ async function auth(app_id) {
         return Promise.reject("empty response " + prompt_question.result);
       }
 
-      const code_auth_token_url = `${OAUTH_HOST}code_auth_token?device_id=${device_id}&client_id=${DEPLOY_APP_ID}`;
+      const code_auth_token_url = `${OAUTH_HOST}code_auth_token?device_id=${device_id}&client_id=${DEPLOY_APP_ID}&mini_app_id=${app_id}`;
       const code_auth_token = await fetch(code_auth_token_url);
       const code_auth_token_json = await code_auth_token.json();
 
