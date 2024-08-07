@@ -5,7 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "./bin/vk-miniapps-deploy"
+    "deploy": "./bin/vk-miniapps-deploy",
+    "lint:eslint": "eslint ./index.js",
+    "lint:prettier": "prettier --check ./index.js",
+    "lint:fix": "eslint ./index.js --fix",
+    "lint:ci": "yarn lint:eslint && yarn lint:prettier"
   },
   "license": "MIT",
   "engines": {
@@ -42,5 +46,12 @@
     "prompts": "^2.1.0",
     "require-module": "^0.1.0",
     "zip-a-folder": "0.0.12"
+  },
+  "devDependencies": {
+    "@vkontakte/eslint-plugin": "^2.0.0",
+    "@vkontakte/prettier-config": "^0.1.0",
+    "eslint": "^8.0.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^2.7.1"
   }
 }

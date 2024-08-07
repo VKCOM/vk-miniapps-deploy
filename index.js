@@ -11,8 +11,8 @@ const vault = new Configstore(packageJson.name, {});
 
 var configJSON = require('require-module')('./vk-hosting-config.json');
 var cfg = configJSON || {};
-prompt.message = "vk-mini-apps-deploy".grey;
-prompt.delimiter = "=>".grey;
+prompt.message = 'vk-mini-apps-deploy'.grey;
+prompt.delimiter = '=>'.grey;
 
 const DEBUG_MODE = !!cfg.debug;
 
@@ -40,14 +40,14 @@ const ERROR_TEST_GROUP_UPDATE = 109;
 const TYPE_SUCCESS = 'success';
 
 const URL_NAMES = {
-  DESKTOP_DEV : 'vk_app_desktop_dev_url',
+  DESKTOP_DEV: 'vk_app_desktop_dev_url',
   MOBILE_DEV: 'vk_app_dev_url',
   MOBILE_WEB_DEV: 'vk_mini_app_mvk_dev_url',
   WEB_LEGACY: 'iframe_url',
   WEB: 'iframe_secure_url',
   MOBILE: 'm_iframe_secure_url',
   MOBILE_WEB: 'vk_mini_app_mvk_url',
-}
+};
 
 const PLATFORMS = {
   WEB: 'vk.com',
@@ -66,11 +66,11 @@ const URL_NAMES_MAP = {
 };
 
 function getTraceId() {
-  return crypto.randomBytes(4).toString("hex");
+  return crypto.randomBytes(4).toString('hex');
 }
 
 /**
- * @param {nodeFetch.RequestInfo} url 
+ * @param {nodeFetch.RequestInfo} url
  * @param {nodeFetch.RequestInit} options
  * @returns {Promise<nodeFetch.Response>}
  */
@@ -79,7 +79,7 @@ async function fetch(url, options) {
     return nodeFetch(url, options);
   }
 
-  const traceId = chalk.hex(`#${(Math.random() * 0xFFFFFF << 0).toString(16)}`)(getTraceId());
+  const traceId = chalk.hex(`#${((Math.random() * 0xffffff) << 0).toString(16)}`)(getTraceId());
   const logLine = (line, type) => console.log(`[${traceId}][${type}]`, chalk.cyan(line));
   const logError = (error) => console.error(`[${traceId}][ERROR]`, chalk.red(error));
 
@@ -93,7 +93,7 @@ async function fetch(url, options) {
     logLine(`${response.status} ${response.statusText}`, 'RESP');
     logLine(body, 'RESP');
 
-    return response
+    return response;
   } catch (e) {
     logError(e);
     throw e;
@@ -119,7 +119,7 @@ async function auth(app_id) {
   }
 
   if (get_auth_code_res.auth_code) {
-    const {auth_code, device_id} = get_auth_code_res;
+    const { auth_code, device_id } = get_auth_code_res;
 
     const code_auth_url = `${OAUTH_HOST}code_auth?stage=check&code=${auth_code}&revoke=1`;
 
@@ -129,11 +129,11 @@ async function auth(app_id) {
         type: 'confirm',
         name: 'result',
         initial: true,
-        message: chalk.yellow('Please open this url in browser', code_auth_url)
+        message: chalk.yellow('Please open this url in browser', code_auth_url),
       });
 
       if (!prompt_question.result) {
-        return Promise.reject("empty response " + prompt_question.result);
+        return Promise.reject('empty response ' + prompt_question.result);
       }
 
       const code_auth_token_url = `${OAUTH_HOST}code_auth_token?device_id=${device_id}&client_id=${DEPLOY_APP_ID}&mini_app_id=${app_id}`;
@@ -145,7 +145,7 @@ async function auth(app_id) {
         continue;
       }
 
-      const {access_token, expires_in} = code_auth_token_json;
+      const { access_token, expires_in } = code_auth_token_json;
       if (access_token || access_token === null) {
         handled = true;
       }
@@ -153,7 +153,6 @@ async function auth(app_id) {
         access_token,
         expires_in,
       });
-
     } while (handled === false);
   }
 }
@@ -168,7 +167,11 @@ async function api(method, params) {
     return false;
   }
 
-  const queryParams = Object.keys(params).map((k) => { return k + "=" + encodeURIComponent(params[k]) }).join('&');
+  const queryParams = Object.keys(params)
+    .map((k) => {
+      return k + '=' + encodeURIComponent(params[k]);
+    })
+    .join('&');
   try {
     const query = await fetch(API_HOST + method + '?' + queryParams);
     const res = await query.json();
@@ -186,12 +189,12 @@ async function api(method, params) {
 
 async function upload(uploadUrl, bundleFile) {
   const formData = new FormData();
-  formData.append('file', fs.createReadStream(bundleFile), {contentType: 'application/zip'});
+  formData.append('file', fs.createReadStream(bundleFile), { contentType: 'application/zip' });
   try {
     const upload = await fetch(uploadUrl, {
       method: 'POST',
       headers: formData.getHeaders(),
-      body: formData
+      body: formData,
     });
     return await upload.json();
   } catch (e) {
@@ -243,14 +246,14 @@ async function handleQueue(user_id, base_url, key, ts, version, handled, cfg) {
           const result = await prompt({
             type: 'text',
             name: 'code',
-            message: chalk.yellow('Please, enter code from Administration: ')
+            message: chalk.yellow('Please, enter code from Administration: '),
           });
 
           if (result.code) {
             const r = await api('apps.confirmDeploy', {
               app_id: cfg.app_id,
               version: version,
-              code: result.code
+              code: result.code,
             });
             if (r.error) {
               console.error('Invalid confirm code');
@@ -322,7 +325,7 @@ async function handleQueue(user_id, base_url, key, ts, version, handled, cfg) {
         if (event.code === CODE_UPDATE_TEST_GROUP_URL) {
           if (event.message && event.message.url) {
             console.info(chalk.green('URL changed for test group "' + cfg.test_group_name + '":'));
-            console.info(event.message.url)
+            console.info(event.message.url);
           }
         }
       }
@@ -333,7 +336,7 @@ async function handleQueue(user_id, base_url, key, ts, version, handled, cfg) {
 }
 
 async function getQueue(version, cfg) {
-  const r = await api('apps.subscribeToHostingQueue', {app_id: cfg.app_id, version: version});
+  const r = await api('apps.subscribeToHostingQueue', { app_id: cfg.app_id, version: version });
   if (!r.base_url || !r.key || !r.ts || !r.app_id) {
     throw new Error(JSON.stringify(r));
   }
@@ -342,7 +345,6 @@ async function getQueue(version, cfg) {
 }
 
 async function run(cfg) {
-
   if (!configJSON) {
     throw new Error('For deploy you need to create config file "vk-hosting-config.json"');
   }
@@ -352,11 +354,11 @@ async function run(cfg) {
     const defaultEnvironment = APPLICATION_ENV_DEV | APPLICATION_ENV_PRODUCTION;
     const environmentMapping = {
       dev: APPLICATION_ENV_DEV,
-      production: APPLICATION_ENV_PRODUCTION
+      production: APPLICATION_ENV_PRODUCTION,
     };
 
     const environment = process.env.MINI_APPS_ENVIRONMENT
-      ? (environmentMapping[process.env.MINI_APPS_ENVIRONMENT] || defaultEnvironment)
+      ? environmentMapping[process.env.MINI_APPS_ENVIRONMENT] || defaultEnvironment
       : defaultEnvironment;
 
     if (process.env.MINI_APPS_APP_ID) {
@@ -387,18 +389,24 @@ async function run(cfg) {
       vault.set('access_token', access_token);
       vault.set('expires_in', expires_in);
       console.log(chalk.cyan('Token is saved in config store!'));
-      console.log(chalk.cyan('\nFor your CI, you can use \n > $ env MINI_APPS_ACCESS_TOKEN=' + access_token + ' yarn deploy'));
+      console.log(
+        chalk.cyan(
+          '\nFor your CI, you can use \n > $ env MINI_APPS_ACCESS_TOKEN=' +
+            access_token +
+            ' yarn deploy',
+        ),
+      );
     }
 
     const params = {
       app_id: cfg.app_id,
       environment: environment,
-      update_prod: + cfg.update_prod,
-      update_dev: + cfg.update_dev
+      update_prod: +cfg.update_prod,
+      update_dev: +cfg.update_dev,
     };
 
     if ('test_group_name' in cfg) {
-      params.test_group_name = cfg.test_group_name
+      params.test_group_name = cfg.test_group_name;
     }
 
     const endpointPlatformKeys = Object.keys(cfg.endpoints);
@@ -425,9 +433,8 @@ async function run(cfg) {
 
     if (!cfg.bundleFile) {
       if (await fs.pathExists(bundleFile)) {
-        fs.removeSync(bundleFile)
+        fs.removeSync(bundleFile);
       }
-
 
       await zip('./' + staticPath, bundleFile);
     }
@@ -442,11 +449,10 @@ async function run(cfg) {
         console.log('Uploaded version ' + r.version + '!');
         return getQueue(r.version, cfg);
       } else {
-        console.error('Upload error:', r)
+        console.error('Upload error:', r);
         process.exit(1);
       }
     });
-
   } catch (e) {
     console.error(chalk.red(e));
     process.exit(1);
@@ -454,5 +460,5 @@ async function run(cfg) {
 }
 
 module.exports = {
-  run: run
+  run: run,
 };
