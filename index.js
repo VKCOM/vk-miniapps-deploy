@@ -176,7 +176,30 @@ async function api(method, params) {
     const query = await fetch(API_HOST + method + '?' + queryParams);
     const res = await query.json();
     if (res.error !== void 0) {
-      throw new Error(chalk.red(res.error.error_code + ': ' + res.error.error_msg));
+      const errorCode = res.error.error_code;
+      const errorMessage = chalk.red(errorCode + ': ' + res.error.error_msg);
+      if (errorCode === 5 && !process.env.MINI_APPS_ACCESS_TOKEN && !cfg.noprompt) {
+        console.error(errorMessage);
+
+        const questions = [
+          {
+            type: 'confirm',
+            initial: true,
+            name: 'updateToken',
+            message: chalk.yellow('Would you like to try to retrieve a new token?'),
+          },
+        ];
+
+        const { updateToken } = await prompt(questions);
+        if (updateToken) {
+          await retrieveAndSaveAccessToken(cfg);
+          return api(method, params);
+        } else {
+          throw new Error(errorMessage);
+        }
+      } else {
+        throw new Error(errorMessage);
+      }
     }
 
     if (res.response !== void 0) {
@@ -344,6 +367,22 @@ async function getQueue(version, cfg) {
   return handleQueue(r.app_id, r.base_url, r.key, r.ts, version, false, cfg);
 }
 
+async function retrieveAndSaveAccessToken(cfg) {
+  console.log('Try to retrieve access token...');
+  const { access_token, expires_in } = await auth(cfg.app_id);
+  cfg.access_token = access_token;
+  vault.set('access_token', access_token);
+  vault.set('expires_in', expires_in);
+  console.log(chalk.cyan('Token is saved in config store!'));
+  console.log(
+    chalk.cyan(
+      '\nFor your CI, you can use \n > $ env MINI_APPS_ACCESS_TOKEN=' +
+        access_token +
+        ' yarn deploy',
+    ),
+  );
+}
+
 async function run(cfg) {
   if (!configJSON) {
     throw new Error('For deploy you need to create config file "vk-hosting-config.json"');
@@ -383,19 +422,7 @@ async function run(cfg) {
     }
 
     if (!cfg.access_token || (cfg.expires_in > 0 && cfg.expires_in * 1000 < Date.now())) {
-      console.log('Try to retrieve access token...');
-      const { access_token, expires_in } = await auth(cfg.app_id);
-      cfg.access_token = access_token;
-      vault.set('access_token', access_token);
-      vault.set('expires_in', expires_in);
-      console.log(chalk.cyan('Token is saved in config store!'));
-      console.log(
-        chalk.cyan(
-          '\nFor your CI, you can use \n > $ env MINI_APPS_ACCESS_TOKEN=' +
-            access_token +
-            ' yarn deploy',
-        ),
-      );
+      await retrieveAndSaveAccessToken(cfg);
     }
 
     const params = {
