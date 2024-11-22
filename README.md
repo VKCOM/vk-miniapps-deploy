@@ -10,6 +10,9 @@ Deploy straight to VK Mini Apps hosting with one simple command.
 # install it from npm and symlink it into your PATH
 npm install @vkontakte/vk-miniapps-deploy -g
 
+# build
+react-scripts build
+
 # now run it!
 vk-miniapps-deploy
 ```
@@ -20,6 +23,8 @@ First add this to your scripts section of `package.json`:
 
 ```JSON
   "scripts": {
+    "build": "react-scripts build",
+    "predeploy": "npm run build",
     "deploy": "vk-miniapps-deploy",
     "clean-source": "rimraf README.md src webroot package.json"
   },
