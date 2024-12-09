@@ -428,12 +428,30 @@ async function run(cfg) {
     const params = {
       app_id: cfg.app_id,
       environment: environment,
-      update_prod: +cfg.update_prod,
-      update_dev: +cfg.update_dev,
     };
 
     if ('test_group_name' in cfg) {
       params.test_group_name = cfg.test_group_name;
+    }
+
+    if ('update_prod' in cfg) {
+      const update_prod = Number(cfg.update_prod);
+
+      if (update_prod !== 0 && update_prod !== 1) {
+        throw new Error('update_prod must be 0 or 1 or boolean.');
+      }
+
+      params.update_prod = update_prod;
+    }
+
+    if ('update_dev' in cfg) {
+      const update_dev = Number(cfg.update_dev);
+
+      if (update_dev !== 0 && update_dev !== 1) {
+        throw new Error('update_dev must be 0 or 1 or boolean.');
+      }
+
+      params.update_dev = update_dev;
     }
 
     const endpointPlatformKeys = Object.keys(cfg.endpoints);
