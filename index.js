@@ -453,6 +453,9 @@ async function run(cfg) {
 
       params.update_dev = update_dev;
     }
+    if ('odr_runtime' in cfg && cfg.odr_runtime !== '') {
+      params.odr_runtime = cfg.odr_runtime;
+    }
 
     const endpointPlatformKeys = Object.keys(cfg.endpoints);
     if (endpointPlatformKeys.length) {

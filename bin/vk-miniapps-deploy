@@ -86,7 +86,11 @@ async function getExtraOptions() {
 
   const extraOptions = await prompt(questions);
 
-  if (extraOptions.update_prod === false && extraOptions.update_dev === false && extraOptions.update_test === false) {
+  if (
+    extraOptions.update_prod === false
+    && extraOptions.update_dev === false
+    && extraOptions.update_test === false
+  ) {
     process.exit();
   }
 
