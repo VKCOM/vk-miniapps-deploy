@@ -5,6 +5,7 @@ const prompt = require('prompts');
 const nodeFetch = require('node-fetch');
 const { zip } = require('zip-a-folder');
 const fs = require('fs-extra');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 const FormData = require('form-data');
 const Configstore = require('configstore');
 const vault = new Configstore(packageJson.name, {});
@@ -69,14 +70,21 @@ function getTraceId() {
   return crypto.randomBytes(4).toString('hex');
 }
 
+function getProxyAgent() {
+  const proxy = cfg.proxy_url || process.env.HTTP_PROXY || process.env.HTTPS_PROXY;
+  return proxy ? new HttpsProxyAgent(proxy) : undefined;
+}
+
 /**
  * @param {nodeFetch.RequestInfo} url
  * @param {nodeFetch.RequestInit} options
  * @returns {Promise<nodeFetch.Response>}
  */
 async function fetch(url, options) {
+  const fetchOptions = { ...options, agent: getProxyAgent() || options?.agent };
+
   if (!DEBUG_MODE) {
-    return nodeFetch(url, options);
+    return nodeFetch(url, fetchOptions);
   }
 
   const traceId = chalk.hex(`#${((Math.random() * 0xffffff) << 0).toString(16)}`)(getTraceId());
@@ -85,9 +93,9 @@ async function fetch(url, options) {
 
   try {
     logLine(url, 'REQ');
-    options && logLine(JSON.stringify(options), 'REQ');
+    options && logLine(JSON.stringify(fetchOptions), 'REQ');
 
-    const response = await nodeFetch(url, options);
+    const response = await nodeFetch(url, fetchOptions);
     const body = await response.clone().text();
 
     logLine(`${response.status} ${response.statusText}`, 'RESP');
