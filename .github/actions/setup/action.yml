@@ -8,12 +8,11 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version: 20
-        cache: 'yarn'
         always-auth: true
         registry-url: 'https://registry.npmjs.org'
 
     - name: Install dependencies
-      run: yarn install --ignore-scripts
+      run: yarn install
       shell: bash
 
     - name: Set Git credentials

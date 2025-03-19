@@ -3,4 +3,5 @@ node_modules/
 build/
 bundle.zip
 vk-hosting-config.json
-.yarn/
+.yarn/*
+!.yarn/releases
