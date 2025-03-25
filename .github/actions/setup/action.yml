@@ -11,10 +11,6 @@ runs:
         always-auth: true
         registry-url: 'https://registry.npmjs.org'
 
-    - name: Enable Corepack
-      run: corepack enable
-      shell: bash
-
     - name: Install dependencies
       run: yarn install
       shell: bash
