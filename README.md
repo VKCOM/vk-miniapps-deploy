@@ -20,6 +20,7 @@ First add this to your scripts section of `package.json`:
 
 ```JSON
   "scripts": {
+    "predeploy": "npm run build",
     "deploy": "vk-miniapps-deploy",
     "clean-source": "rimraf README.md src webroot package.json"
   },
@@ -79,3 +80,5 @@ rm ~/.config/configstore/@vkontakte/vk-miniapps-deploy.json
 
 [npm]: https://img.shields.io/npm/v/@vkontakte/vk-miniapps-deploy.svg
 [npm-url]: https://npmjs.com/package/@vkontakte/vk-miniapps-deploy
+
+For more details, visit the official [VK Developer Portal](https://dev.vk.com/mini-apps/development/hosting/overview).
