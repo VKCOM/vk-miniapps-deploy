@@ -476,12 +476,13 @@ async function run(cfg) {
       }
     }
 
-    const r = await api('apps.getBundleUploadServer', params);
-    if (!r || !r.upload_url) {
+    const uploadServer = await api('apps.getGoHostingUploadServer', params);
+
+    if (!uploadServer || !uploadServer.upload_url) {
       throw new Error(JSON.stringify('upload_url is undefined', r));
     }
 
-    const uploadURL = r.upload_url;
+    const uploadURL = uploadServer.upload_url;
     const bundleFile = cfg.bundleFile || './build.zip';
 
     if (!cfg.bundleFile) {
@@ -497,19 +498,19 @@ async function run(cfg) {
       return false;
     }
 
-    return await upload(uploadURL, bundleFile).then((r) => {
-      if (r.version) {
-        console.log('Uploaded version ' + r.version + '!');
-        console.warn(
-          'WARNING: Versions below 1.0.0 are deprecated. Please upgrade to v1.0.0 or later.',
-        );
-
-        return getQueue(r.version, cfg);
-      } else {
-        console.error('Upload error:', r);
-        process.exit(1);
-      }
+    const uploadResponse = await upload(uploadURL, bundleFile);
+    const taskData = await api('apps.createGoHostingTask', {
+      ...params,
+      upload_response: Buffer.from(JSON.stringify(uploadResponse)).toString('base64'),
     });
+
+    if (taskData.version) {
+      console.log('Uploaded version ' + taskData.version + '!');
+      return getQueue(taskData.version, cfg);
+    } else {
+      console.error('Upload error:', r);
+      process.exit(1);
+    }
   } catch (e) {
     console.error(chalk.red(e));
     process.exit(1);
