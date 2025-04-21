@@ -500,6 +500,10 @@ async function run(cfg) {
     return await upload(uploadURL, bundleFile).then((r) => {
       if (r.version) {
         console.log('Uploaded version ' + r.version + '!');
+        console.warn(
+          'WARNING: Versions below 1.0.0 are deprecated. Please upgrade to v1.0.0 or later.',
+        );
+
         return getQueue(r.version, cfg);
       } else {
         console.error('Upload error:', r);
