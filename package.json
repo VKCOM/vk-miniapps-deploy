@@ -1,6 +1,6 @@
 {
   "name": "@vkontakte/vk-miniapps-deploy",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Deploy to VK Mini Apps hosting with one simple command",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,8 @@
     "lint:eslint": "eslint ./index.js",
     "lint:prettier": "prettier --check ./index.js",
     "lint:fix": "eslint ./index.js --fix",
-    "lint:ci": "yarn lint:eslint && yarn lint:prettier"
+    "lint:ci": "yarn lint:eslint && yarn lint:prettier",
+    "postinstall": "node -e \"console.warn('WARNING: Versions below 1.0.0 are deprecated. Please upgrade to v1.0.0 or later.')\""
   },
   "license": "MIT",
   "engines": {
