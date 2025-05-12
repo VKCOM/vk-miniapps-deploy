@@ -4,6 +4,9 @@
 
 Deploy straight to VK Mini Apps hosting with one simple command.
 
+## ⚠️Attention 
+All versions of the package below `v1.0.0` are deprecated and no longer supported. This is due to the migration of our static hosting from PHP to Go, which has resulted in improved performance and stability. Please upgrade to version `v1.0.0` or later to continue receiving support, bug fixes, and performance improvements.
+
 ## Usage
 
 ```
