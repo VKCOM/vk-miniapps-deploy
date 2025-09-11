@@ -1,4 +1,4 @@
-[<img width="134" src="https://sun9-30.userapi.com/IMLu3sXowImUG-VtL34AqHT4qIUBapkCO0dyhA/bz55lWspvOk.svg">](https://vk.com/services)
+[<img width="134" src="https://sun9-30.userapi.com/IMLu3sXowImUG-VtL34AqHT4qIUBapkCO0dyhA/bz55lWspvOk.svg">](https://vk.ru/services)
 
 # VK Mini Apps Deploy [![npm][npm]][npm-url]
 
@@ -84,4 +84,4 @@ rm ~/.config/configstore/@vkontakte/vk-miniapps-deploy.json
 [npm]: https://img.shields.io/npm/v/@vkontakte/vk-miniapps-deploy.svg
 [npm-url]: https://npmjs.com/package/@vkontakte/vk-miniapps-deploy
 
-For more details, visit the official [VK Developer Portal](https://dev.vk.com/mini-apps/development/hosting/overview).
+For more details, visit the official [VK Developer Portal](https://dev.vk.ru/mini-apps/development/hosting/overview).

@@ -17,8 +17,8 @@ prompt.delimiter = '=>'.grey;
 
 const DEBUG_MODE = !!cfg.debug;
 
-const API_HOST = cfg.api_host || 'https://api.vk.com/method/';
-const OAUTH_HOST = cfg.oauth_host || 'https://oauth.vk.com/';
+const API_HOST = cfg.api_host || 'https://api.vk.ru/method/';
+const OAUTH_HOST = cfg.oauth_host || 'https://oauth.vk.ru/';
 
 const API_VERSION = '5.131';
 const DEPLOY_APP_ID = 6670517;
@@ -51,9 +51,9 @@ const URL_NAMES = {
 };
 
 const PLATFORMS = {
-  WEB: 'vk.com',
+  WEB: 'vk.ru',
   MOBILE: 'iOS & Android',
-  MOBILE_WEB: 'm.vk.com',
+  MOBILE_WEB: 'm.vk.ru',
 };
 
 const URL_NAMES_MAP = {
