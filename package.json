@@ -55,8 +55,5 @@
     "eslint": "^8.0.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^2.7.1"
-  },
-  "publishConfig": {
-    "provenance": true
   }
 }
