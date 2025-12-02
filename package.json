@@ -34,9 +34,9 @@
   "bin": "./bin/vk-miniapps-deploy",
   "repository": {
     "type": "git",
-    "url": "https://github.com/vkcom/vk-miniapps-deploy.git"
+    "url": "https://github.com/VKCOM/vk-miniapps-deploy"
   },
-  "homepage": "https://github.com/vkcom/vk-miniapps-deploy",
+  "homepage": "https://github.com/VKCOM/vk-miniapps-deploy",
   "dependencies": {
     "async": "^3.2.0",
     "chalk": "^3.0.0",
