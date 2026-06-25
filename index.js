@@ -227,9 +227,16 @@ async function upload(uploadUrl, bundleFile) {
       headers: formData.getHeaders(),
       body: formData,
     });
-    return await upload.json();
+    const response = await upload.json();
+
+    console.log('Storage response:', JSON.stringify(response, null, 2));
+    console.log('sha:', response.sha);
+    console.log('secret:', response.secret ? 'present' : 'missing');
+
+    return response;
   } catch (e) {
     console.error('upload error', e);
+    throw e;
   }
 }
 
@@ -499,9 +506,20 @@ async function run(cfg) {
     }
 
     const uploadResponse = await upload(uploadURL, bundleFile);
+
+    console.log('Upload response before base64:', JSON.stringify(uploadResponse, null, 2));
+    console.log('sha in uploadResponse:', uploadResponse.sha);
+    console.log('secret in uploadResponse:', uploadResponse.secret ? 'present' : 'missing');
+
+    const uploadResponseBase64 = Buffer.from(JSON.stringify(uploadResponse)).toString('base64');
+
+    const decoded = JSON.parse(Buffer.from(uploadResponseBase64, 'base64').toString());
+    console.log('Decoded after base64-sha:', decoded.sha);
+    console.log('Decoded after base64-secret:', decoded.secret ? 'present' : 'missing');
+
     const taskData = await api('apps.createGoHostingTask', {
       ...params,
-      upload_response: Buffer.from(JSON.stringify(uploadResponse)).toString('base64'),
+      upload_response: uploadResponseBase64,
     });
 
     if (taskData.version) {
