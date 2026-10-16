@@ -1,16 +1,17 @@
 const crypto = require('crypto');
 const packageJson = require('./package.json');
+const path = require('path');
 const chalk = require('chalk');
 const prompt = require('prompts');
 const nodeFetch = require('node-fetch');
-const { zip } = require('zip-a-folder');
 const fs = require('fs-extra');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const FormData = require('form-data');
 const Configstore = require('configstore');
+const zip = require('./zip');
 const vault = new Configstore(packageJson.name, {});
 
-var configJSON = require('require-module')('./vk-hosting-config.json');
+var configJSON = require(path.resolve(process.cwd(), './vk-hosting-config.json'));
 var cfg = configJSON || {};
 prompt.message = 'vk-mini-apps-deploy'.grey;
 prompt.delimiter = '=>'.grey;
