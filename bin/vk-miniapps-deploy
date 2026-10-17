@@ -1,18 +1,20 @@
 #!/usr/bin/env node
-var chalk = require('chalk');
-const fs = require('fs-extra');
+const { styleText } = require('util');
+const fs = require('fs');
 const configFilePath = './vk-hosting-config.json';
+const path = require('path');
 const prompt = require('prompts');
 
 async function run() {
-  fs.pathExists(configFilePath).then((res) => {
-    if (!res) {
+  fs.promises.access(configFilePath).then(
+    () => {},
+    () => {
       console.error(configFilePath + ' is missing');
       return false;
-    }
-  });
+    },
+  );
 
-  const configJSON = require('require-module')(configFilePath);
+  const configJSON = require(path.resolve(process.cwd(), configFilePath));
   if (!configJSON) {
     console.error(configFilePath + ' is missing');
     return false;
@@ -30,14 +32,14 @@ async function run() {
   }
 
   if (!cfg.noprompt) {
-    prompt.message = chalk.cyan("vk-mini-apps-deploy:");
-    prompt.delimiter = chalk.green(" $ ");
+    prompt.message = styleText('cyan', "vk-mini-apps-deploy:");
+    prompt.delimiter = styleText('green', " $ ");
 
     confirmation = await prompt({
       type: 'confirm',
       initial: true,
       name: 'result',
-      message: chalk.yellow('Would you like to deploy to VK Mini Apps hosting using these commands?')
+      message: styleText('yellow', 'Would you like to deploy to VK Mini Apps hosting using these commands?')
     });
 
     if (!confirmation.result) {
@@ -63,24 +65,24 @@ async function getExtraOptions() {
       type: 'confirm',
       initial: true,
       name: 'update_prod',
-      message: chalk.yellow('Would you like to update prod urls?')
+      message: styleText('yellow', 'Would you like to update prod urls?')
     },
     {
       type: 'confirm',
       initial: true,
       name: 'update_dev',
-      message: chalk.yellow('Would you like to update dev urls?')
+      message: styleText('yellow', 'Would you like to update dev urls?')
     },
     {
       type: 'confirm',
       initial: false,
       name: 'update_test',
-      message: chalk.yellow('Would you like to update test group url?')
+      message: styleText('yellow', 'Would you like to update test group url?')
     },
     {
       type: prev => prev === true ? 'text' : null,
       name: 'test_group_name',
-      message: chalk.yellow('Enter test group name:')
+      message: styleText('yellow', 'Enter test group name:')
     }
   ];
 
