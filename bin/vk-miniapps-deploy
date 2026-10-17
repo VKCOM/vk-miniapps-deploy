@@ -1,18 +1,20 @@
 #!/usr/bin/env node
 var chalk = require('chalk');
-const fs = require('fs-extra');
+const fs = require('fs');
 const configFilePath = './vk-hosting-config.json';
+const path = require('path');
 const prompt = require('prompts');
 
 async function run() {
-  fs.pathExists(configFilePath).then((res) => {
-    if (!res) {
+  fs.promises.access(configFilePath).then(
+    () => {},
+    () => {
       console.error(configFilePath + ' is missing');
       return false;
-    }
-  });
+    },
+  );
 
-  const configJSON = require('require-module')(configFilePath);
+  const configJSON = require(path.resolve(process.cwd(), configFilePath));
   if (!configJSON) {
     console.error(configFilePath + ' is missing');
     return false;
