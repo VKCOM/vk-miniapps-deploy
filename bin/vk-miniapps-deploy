@@ -1,18 +1,20 @@
 #!/usr/bin/env node
-var chalk = require('chalk');
-const fs = require('fs-extra');
+const { styleText } = require('util');
+const fs = require('fs');
 const configFilePath = './vk-hosting-config.json';
-const prompt = require('prompts');
+const path = require('path');
+const { confirm, text, close } = require('../readline-prompt');
 
 async function run() {
-  fs.pathExists(configFilePath).then((res) => {
-    if (!res) {
+  fs.promises.access(configFilePath).then(
+    () => {},
+    () => {
       console.error(configFilePath + ' is missing');
       return false;
-    }
-  });
+    },
+  );
 
-  const configJSON = require('require-module')(configFilePath);
+  const configJSON = require(path.resolve(process.cwd(), configFilePath));
   if (!configJSON) {
     console.error(configFilePath + ' is missing');
     return false;
@@ -25,26 +27,18 @@ async function run() {
     console.log('\nDebug mode is enabled. It will log all client requests!\n');
   }
 
-  let confirmation = {
-    result: true,
-  }
-
   if (!cfg.noprompt) {
-    prompt.message = chalk.cyan("vk-mini-apps-deploy:");
-    prompt.delimiter = chalk.green(" $ ");
+    const confirmation = await confirm(
+      styleText('yellow', 'Would you like to deploy to VK Mini Apps hosting using these commands?'),
+      true,
+    );
 
-    confirmation = await prompt({
-      type: 'confirm',
-      initial: true,
-      name: 'result',
-      message: chalk.yellow('Would you like to deploy to VK Mini Apps hosting using these commands?')
-    });
-
-    if (!confirmation.result) {
+    if (!confirmation) {
+      close();
       process.exit();
     }
 
-    const extraOptions = await getExtraOptions()
+    const extraOptions = await getExtraOptions();
     cfg.update_prod = extraOptions.update_prod;
     cfg.update_dev = extraOptions.update_dev;
 
@@ -53,43 +47,53 @@ async function run() {
     }
   }
 
-  const status = await deploy.run(cfg) ? 0 : 1;
+  const status = (await deploy.run(cfg)) ? 0 : 1;
+  close();
   process.exit(status);
 }
 
 async function getExtraOptions() {
-  const questions = [
-    {
-      type: 'confirm',
-      initial: true,
-      name: 'update_prod',
-      message: chalk.yellow('Would you like to update prod urls?')
-    },
-    {
-      type: 'confirm',
-      initial: true,
-      name: 'update_dev',
-      message: chalk.yellow('Would you like to update dev urls?')
-    },
-    {
-      type: 'confirm',
-      initial: false,
-      name: 'update_test',
-      message: chalk.yellow('Would you like to update test group url?')
-    },
-    {
-      type: prev => prev === true ? 'text' : null,
-      name: 'test_group_name',
-      message: chalk.yellow('Enter test group name:')
-    }
-  ];
-
-  const extraOptions = await prompt(questions);
-
-  if (extraOptions.update_prod === false && extraOptions.update_dev === false && extraOptions.update_test === false) {
+  const update_prod = await confirm(
+    styleText('yellow', 'Would you like to update prod urls?'),
+    true,
+  );
+  if (update_prod === undefined) {
+    close();
     process.exit();
   }
 
-  return extraOptions;
+  const update_dev = await confirm(
+    styleText('yellow', 'Would you like to update dev urls?'),
+    true,
+  );
+  if (update_dev === undefined) {
+    close();
+    process.exit();
+  }
+
+  const update_test = await confirm(
+    styleText('yellow', 'Would you like to update test group url?'),
+    false,
+  );
+  if (update_test === undefined) {
+    close();
+    process.exit();
+  }
+
+  const test_group_name = update_test
+    ? await text(styleText('yellow', 'Enter test group name:'))
+    : undefined;
+  if (test_group_name === undefined && update_test) {
+    close();
+    process.exit();
+  }
+
+  if (update_prod === false && update_dev === false && update_test === false) {
+    close();
+    process.exit();
+  }
+
+  return { update_prod, update_dev, update_test, test_group_name };
 }
-run().then(r => console.log(r));
+
+run().then((r) => console.log(r));

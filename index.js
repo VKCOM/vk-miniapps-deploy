@@ -1,19 +1,14 @@
-const crypto = require('crypto');
-const packageJson = require('./package.json');
-const chalk = require('chalk');
-const prompt = require('prompts');
-const nodeFetch = require('node-fetch');
-const { zip } = require('zip-a-folder');
-const fs = require('fs-extra');
-const { HttpsProxyAgent } = require('https-proxy-agent');
-const FormData = require('form-data');
-const Configstore = require('configstore');
-const vault = new Configstore(packageJson.name, {});
+const path = require('path');
+const { styleText } = require('util');
+const fs = require('fs');
+const zip = require('./zip');
+const createFetch = require('./fetch-request');
+const createProxyAgent = require('./proxy-agent');
+const { confirm, text: promptText, close: closePrompt } = require('./readline-prompt');
+const tokenStore = require('./token-store');
 
-var configJSON = require('require-module')('./vk-hosting-config.json');
+var configJSON = require(path.resolve(process.cwd(), './vk-hosting-config.json'));
 var cfg = configJSON || {};
-prompt.message = 'vk-mini-apps-deploy'.grey;
-prompt.delimiter = '=>'.grey;
 
 const DEBUG_MODE = !!cfg.debug;
 
@@ -66,46 +61,36 @@ const URL_NAMES_MAP = {
   [URL_NAMES.MOBILE_WEB]: PLATFORMS.MOBILE_WEB,
 };
 
-function getTraceId() {
-  return crypto.randomBytes(4).toString('hex');
-}
+let proxyAgent;
+let proxyFetch;
+let proxyFormData;
 
-function getProxyAgent() {
+function getRequestClient() {
   const proxy = cfg.proxy_url || process.env.HTTP_PROXY || process.env.HTTPS_PROXY;
-  return proxy ? new HttpsProxyAgent(proxy) : undefined;
+  if (!proxy) {
+    return { fetch: globalThis.fetch, FormData: globalThis.FormData };
+  }
+
+  if (!proxyAgent) {
+    const undici = require('undici');
+    proxyAgent = createProxyAgent(proxy, undici.ProxyAgent);
+    proxyFetch = undici.fetch;
+    proxyFormData = undici.FormData;
+  }
+
+  return { fetch: proxyFetch, FormData: proxyFormData, dispatcher: proxyAgent };
 }
 
-/**
- * @param {nodeFetch.RequestInfo} url
- * @param {nodeFetch.RequestInit} options
- * @returns {Promise<nodeFetch.Response>}
- */
-async function fetch(url, options) {
-  const fetchOptions = { ...options, agent: getProxyAgent() || options?.agent };
+const fetch = createFetch(getRequestClient, DEBUG_MODE);
 
-  if (!DEBUG_MODE) {
-    return nodeFetch(url, fetchOptions);
+function closeProxyAgent() {
+  if (!proxyAgent) {
+    return;
   }
 
-  const traceId = chalk.hex(`#${((Math.random() * 0xffffff) << 0).toString(16)}`)(getTraceId());
-  const logLine = (line, type) => console.log(`[${traceId}][${type}]`, chalk.cyan(line));
-  const logError = (error) => console.error(`[${traceId}][ERROR]`, chalk.red(error));
-
-  try {
-    logLine(url, 'REQ');
-    options && logLine(JSON.stringify(fetchOptions), 'REQ');
-
-    const response = await nodeFetch(url, fetchOptions);
-    const body = await response.clone().text();
-
-    logLine(`${response.status} ${response.statusText}`, 'RESP');
-    logLine(body, 'RESP');
-
-    return response;
-  } catch (e) {
-    logError(e);
-    throw e;
-  }
+  const agent = proxyAgent;
+  proxyAgent = undefined;
+  return agent.close();
 }
 
 /**
@@ -133,15 +118,13 @@ async function auth(app_id) {
 
     let handled = false;
     do {
-      const prompt_question = await prompt({
-        type: 'confirm',
-        name: 'result',
-        initial: true,
-        message: chalk.yellow('Please open this url in browser', code_auth_url),
-      });
+      const promptQuestion = await confirm(
+        styleText('yellow', 'Please open this url in browser ' + code_auth_url),
+        true,
+      );
 
-      if (!prompt_question.result) {
-        return Promise.reject('empty response ' + prompt_question.result);
+      if (!promptQuestion) {
+        return Promise.reject('empty response ' + promptQuestion);
       }
 
       const code_auth_token_url = `${OAUTH_HOST}code_auth_token?device_id=${device_id}&client_id=${DEPLOY_APP_ID}&mini_app_id=${app_id}`;
@@ -180,57 +163,41 @@ async function api(method, params) {
       return k + '=' + encodeURIComponent(params[k]);
     })
     .join('&');
-  try {
-    const query = await fetch(API_HOST + method + '?' + queryParams);
-    const res = await query.json();
-    if (res.error !== void 0) {
-      const errorCode = res.error.error_code;
-      const errorMessage = chalk.red(errorCode + ': ' + res.error.error_msg);
-      if (errorCode === 5 && !process.env.MINI_APPS_ACCESS_TOKEN && !cfg.noprompt) {
-        console.error(errorMessage);
+  const query = await fetch(API_HOST + method + '?' + queryParams);
+  const res = await query.json();
+  if (res.error !== void 0) {
+    const errorCode = res.error.error_code;
+    const errorMessage = styleText('red', errorCode + ': ' + res.error.error_msg);
+    if (errorCode === 5 && !process.env.MINI_APPS_ACCESS_TOKEN && !cfg.noprompt) {
+      console.error(errorMessage);
 
-        const questions = [
-          {
-            type: 'confirm',
-            initial: true,
-            name: 'updateToken',
-            message: chalk.yellow('Would you like to try to retrieve a new token?'),
-          },
-        ];
-
-        const { updateToken } = await prompt(questions);
-        if (updateToken) {
-          await retrieveAndSaveAccessToken(cfg);
-          return api(method, params);
-        } else {
-          throw new Error(errorMessage);
-        }
+      const updateToken = await confirm(
+        styleText('yellow', 'Would you like to try to retrieve a new token?'),
+        true,
+      );
+      if (updateToken) {
+        await retrieveAndSaveAccessToken(cfg);
+        return api(method, params);
       } else {
         throw new Error(errorMessage);
       }
+    } else {
+      throw new Error(errorMessage);
     }
+  }
 
-    if (res.response !== void 0) {
-      return res.response;
-    }
-  } catch (e) {
-    console.error(e);
+  if (res.response !== void 0) {
+    return res.response;
   }
 }
 
 async function upload(uploadUrl, bundleFile) {
+  const { FormData } = getRequestClient();
   const formData = new FormData();
-  formData.append('file', fs.createReadStream(bundleFile), { contentType: 'application/zip' });
-  try {
-    const upload = await fetch(uploadUrl, {
-      method: 'POST',
-      headers: formData.getHeaders(),
-      body: formData,
-    });
-    return await upload.json();
-  } catch (e) {
-    console.error('upload error', e);
-  }
+  const blob = await fs.openAsBlob(bundleFile, { type: 'application/zip' });
+  formData.append('file', blob, path.basename(bundleFile));
+  const upload = await fetch(uploadUrl, { method: 'POST', body: formData });
+  return await upload.json();
 }
 
 async function handleQueue(user_id, base_url, key, ts, version, handled, cfg) {
@@ -258,33 +225,33 @@ async function handleQueue(user_id, base_url, key, ts, version, handled, cfg) {
         const message = event.message || '';
 
         if (event.code === ERROR_TEST_GROUP_UPDATE) {
-          console.error(chalk.red('Test group url update error'));
+          console.error(styleText('red', 'Test group url update error'));
           continue;
         }
 
-        console.error(chalk.red('Deploy failed, error code: #' + event.code + ' ' + message));
+        console.error(
+          styleText('red', 'Deploy failed, error code: #' + event.code + ' ' + message),
+        );
         return false;
       }
 
       if (event.type === TYPE_SUCCESS) {
         if (event.code === CODE_SUCCESS) {
-          console.info(chalk.green('Deploy success...'));
+          console.info(styleText('green', 'Deploy success...'));
           continue;
         }
 
         if (event.code === CODE_CONFIRM_SENT_VIA_MESSAGE) {
-          console.info(chalk.green('Please, confirm deploy on your phone.'));
-          const result = await prompt({
-            type: 'text',
-            name: 'code',
-            message: chalk.yellow('Please, enter code from Administration: '),
-          });
+          console.info(styleText('green', 'Please, confirm deploy on your phone.'));
+          const code = await promptText(
+            styleText('yellow', 'Please, enter code from Administration:'),
+          );
 
-          if (result.code) {
+          if (code) {
             const r = await api('apps.confirmDeploy', {
               app_id: cfg.app_id,
               version: version,
-              code: result.code,
+              code: code,
             });
             if (r.error) {
               console.error('Invalid confirm code');
@@ -294,12 +261,12 @@ async function handleQueue(user_id, base_url, key, ts, version, handled, cfg) {
         }
 
         if (event.code === CODE_PUSH_SENT_VIA_PUSH) {
-          console.info(chalk.green('Please, confirm deploy on your phone.'));
+          console.info(styleText('green', 'Please, confirm deploy on your phone.'));
           continue;
         }
 
         if (event.code === CODE_PUSH_APPROVED) {
-          console.info(chalk.green('Deploy confirmed successfully.'));
+          console.info(styleText('green', 'Deploy confirmed successfully.'));
           continue;
         }
 
@@ -321,12 +288,12 @@ async function handleQueue(user_id, base_url, key, ts, version, handled, cfg) {
             const urls = event.message.urls;
             if (event.message.is_production && !handled.production) {
               handled.production = true;
-              console.info(chalk.green('URLs changed for production:'));
+              console.info(styleText('green', 'URLs changed for production:'));
             }
 
             if (!event.message.is_production && !handled.dev) {
               handled.dev = true;
-              console.info(chalk.green('URLs changed for dev:'));
+              console.info(styleText('green', 'URLs changed for dev:'));
             }
 
             let urlKeys = Object.keys(urls);
@@ -355,7 +322,9 @@ async function handleQueue(user_id, base_url, key, ts, version, handled, cfg) {
 
         if (event.code === CODE_UPDATE_TEST_GROUP_URL) {
           if (event.message && event.message.url) {
-            console.info(chalk.green('URL changed for test group "' + cfg.test_group_name + '":'));
+            console.info(
+              styleText('green', 'URL changed for test group "' + cfg.test_group_name + '":'),
+            );
             console.info(event.message.url);
           }
         }
@@ -379,11 +348,11 @@ async function retrieveAndSaveAccessToken(cfg) {
   console.log('Try to retrieve access token...');
   const { access_token, expires_in } = await auth(cfg.app_id);
   cfg.access_token = access_token;
-  vault.set('access_token', access_token);
-  vault.set('expires_in', expires_in);
-  console.log(chalk.cyan('Token is saved in config store!'));
+  tokenStore.save({ access_token, expires_in });
+  console.log(styleText('cyan', 'Token is saved in config store!'));
   console.log(
-    chalk.cyan(
+    styleText(
+      'cyan',
       '\nFor your CI, you can use \n > $ env MINI_APPS_ACCESS_TOKEN=' +
         access_token +
         ' yarn deploy',
@@ -424,9 +393,10 @@ async function run(cfg) {
       cfg.access_token = process.env.MINI_APPS_ACCESS_TOKEN;
     }
 
-    if (!cfg.access_token && vault.get('access_token')) {
-      cfg.access_token = vault.get('access_token');
-      cfg.expires_in = vault.get('expires_in') || 0;
+    const storedToken = cfg.access_token ? {} : tokenStore.read();
+    if (storedToken.access_token) {
+      cfg.access_token = storedToken.access_token;
+      cfg.expires_in = storedToken.expires_in || 0;
     }
 
     if (!cfg.access_token || (cfg.expires_in > 0 && cfg.expires_in * 1000 < Date.now())) {
@@ -479,21 +449,18 @@ async function run(cfg) {
     const uploadServer = await api('apps.getGoHostingUploadServer', params);
 
     if (!uploadServer || !uploadServer.upload_url) {
-      throw new Error(JSON.stringify('upload_url is undefined', r));
+      throw new Error(`upload_url is undefined: ${JSON.stringify(uploadServer)}`);
     }
 
     const uploadURL = uploadServer.upload_url;
     const bundleFile = cfg.bundleFile || './build.zip';
 
     if (!cfg.bundleFile) {
-      if (await fs.pathExists(bundleFile)) {
-        fs.removeSync(bundleFile);
-      }
-
+      fs.rmSync(bundleFile, { recursive: true, force: true });
       await zip('./' + staticPath, bundleFile);
     }
 
-    if (!fs.pathExists(bundleFile)) {
+    if (!fs.existsSync(bundleFile)) {
       console.error('Empty bundle file: ' + bundleFile);
       return false;
     }
@@ -506,13 +473,16 @@ async function run(cfg) {
 
     if (taskData.version) {
       console.log('Uploaded version ' + taskData.version + '!');
-      return getQueue(taskData.version, cfg);
+      return getQueue(taskData.version, cfg).finally(() => {
+        closePrompt();
+        return closeProxyAgent();
+      });
     } else {
-      console.error('Upload error:', r);
+      console.error('Upload error: missing task version', taskData);
       process.exit(1);
     }
   } catch (e) {
-    console.error(chalk.red(e));
+    console.error(styleText('red', String(e)));
     process.exit(1);
   }
 }

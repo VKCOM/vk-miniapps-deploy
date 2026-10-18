@@ -1,20 +1,33 @@
 {
   "name": "@vkontakte/vk-miniapps-deploy",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Deploy to VK Mini Apps hosting with one simple command",
   "main": "index.js",
+  "files": [
+    "bin/",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md",
+    "index.js",
+    "vk-hosting-config.json.example",
+    "fetch-request.js",
+    "proxy-agent.js",
+    "readline-prompt.js",
+    "token-store.js",
+    "zip.js"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test",
     "deploy": "./bin/vk-miniapps-deploy",
-    "lint:eslint": "eslint ./index.js",
-    "lint:prettier": "prettier --check ./index.js",
-    "lint:fix": "eslint ./index.js --fix",
+    "lint:eslint": "eslint ./*.js ./test",
+    "lint:prettier": "prettier --check ./*.js ./test",
+    "lint:fix": "eslint ./*.js ./test --fix",
     "lint:ci": "yarn lint:eslint && yarn lint:prettier",
     "postinstall": "node -e \"console.warn('WARNING: Versions below 1.0.0 are deprecated. Please upgrade to v1.0.0 or later.')\""
   },
   "license": "MIT",
   "engines": {
-    "node": ">=8.10"
+    "node": ">=22.17"
   },
   "author": {
     "name": "VK",
@@ -38,16 +51,8 @@
   },
   "homepage": "https://github.com/VKCOM/vk-miniapps-deploy",
   "dependencies": {
-    "async": "^3.2.0",
-    "chalk": "^3.0.0",
-    "configstore": "^5.0.0",
-    "form-data": "^3.0.0",
-    "fs-extra": "^8.0.1",
-    "https-proxy-agent": "^7.0.6",
-    "node-fetch": "^2.6.0",
-    "prompts": "^2.1.0",
-    "require-module": "^0.1.0",
-    "zip-a-folder": "0.0.12"
+    "undici": "^7.16.0",
+    "yazl": "^3.3.1"
   },
   "devDependencies": {
     "@vkontakte/eslint-plugin": "^2.0.0",
