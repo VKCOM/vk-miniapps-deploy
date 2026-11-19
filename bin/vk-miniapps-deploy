@@ -2,6 +2,7 @@
 var chalk = require('chalk');
 const fs = require('fs-extra');
 const configFilePath = './vk-hosting-config.json';
+const path = require('path');
 const prompt = require('prompts');
 
 async function run() {
@@ -12,7 +13,7 @@ async function run() {
     }
   });
 
-  const configJSON = require('require-module')(configFilePath);
+  const configJSON = require(path.resolve(process.cwd(), configFilePath));
   if (!configJSON) {
     console.error(configFilePath + ' is missing');
     return false;
