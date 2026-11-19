@@ -66,6 +66,8 @@ const URL_NAMES_MAP = {
   [URL_NAMES.MOBILE_WEB]: PLATFORMS.MOBILE_WEB,
 };
 
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 function getTraceId() {
   return crypto.randomBytes(4).toString('hex');
 }
@@ -78,33 +80,70 @@ function getProxyAgent() {
 /**
  * @param {nodeFetch.RequestInfo} url
  * @param {nodeFetch.RequestInit} options
+ * @param {number} retries
+ * @param {number} backoff
  * @returns {Promise<nodeFetch.Response>}
  */
-async function fetch(url, options) {
+async function fetch(url, options, retries = 3, backoff = 1000) {
   const fetchOptions = { ...options, agent: getProxyAgent() || options?.agent };
 
-  if (!DEBUG_MODE) {
-    return nodeFetch(url, fetchOptions);
-  }
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      if (DEBUG_MODE) {
+        const traceId = chalk.hex(`#${((Math.random() * 0xffffff) << 0).toString(16)}`)(
+          getTraceId(),
+        );
+        const logLine = (line, type) => console.log(`[${traceId}][${type}]`, chalk.cyan(line));
 
-  const traceId = chalk.hex(`#${((Math.random() * 0xffffff) << 0).toString(16)}`)(getTraceId());
-  const logLine = (line, type) => console.log(`[${traceId}][${type}]`, chalk.cyan(line));
-  const logError = (error) => console.error(`[${traceId}][ERROR]`, chalk.red(error));
+        logLine(url, 'REQ');
+        options && logLine(JSON.stringify(fetchOptions), 'REQ');
 
-  try {
-    logLine(url, 'REQ');
-    options && logLine(JSON.stringify(fetchOptions), 'REQ');
+        const response = await nodeFetch(url, fetchOptions);
 
-    const response = await nodeFetch(url, fetchOptions);
-    const body = await response.clone().text();
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
 
-    logLine(`${response.status} ${response.statusText}`, 'RESP');
-    logLine(body, 'RESP');
+        const body = await response.clone().text();
 
-    return response;
-  } catch (e) {
-    logError(e);
-    throw e;
+        if (body.trim().startsWith('<!DOCTYPE') || body.trim().startsWith('<html')) {
+          throw new Error('Server returned HTML page instead of expected response');
+        }
+
+        logLine(`${response.status} ${response.statusText}`, 'RESP');
+        logLine(body, 'RESP');
+
+        return response;
+      }
+
+      const response = await nodeFetch(url, fetchOptions);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const clonedResponse = response.clone();
+      const bodyText = await clonedResponse.text();
+      if (bodyText.trim().startsWith('<!DOCTYPE') || bodyText.trim().startsWith('<html')) {
+        throw new Error('Server returned HTML page instead of expected response');
+      }
+
+      return response;
+    } catch (e) {
+      if (attempt < retries) {
+        console.warn(
+          chalk.yellow(
+            `[RETRY ${attempt}/${retries - 1}] Request failed (${
+              e.message
+            }). Retrying in ${backoff}ms...`,
+          ),
+        );
+        await delay(backoff);
+      } else {
+        console.error(chalk.red(`[FETCH FAILED] Request failed after ${retries} attempts.`));
+        throw e;
+      }
+    }
   }
 }
 
@@ -180,57 +219,49 @@ async function api(method, params) {
       return k + '=' + encodeURIComponent(params[k]);
     })
     .join('&');
-  try {
-    const query = await fetch(API_HOST + method + '?' + queryParams);
-    const res = await query.json();
-    if (res.error !== void 0) {
-      const errorCode = res.error.error_code;
-      const errorMessage = chalk.red(errorCode + ': ' + res.error.error_msg);
-      if (errorCode === 5 && !process.env.MINI_APPS_ACCESS_TOKEN && !cfg.noprompt) {
-        console.error(errorMessage);
+  const query = await fetch(API_HOST + method + '?' + queryParams);
+  const res = await query.json();
+  if (res.error !== void 0) {
+    const errorCode = res.error.error_code;
+    const errorMessage = chalk.red(errorCode + ': ' + res.error.error_msg);
+    if (errorCode === 5 && !process.env.MINI_APPS_ACCESS_TOKEN && !cfg.noprompt) {
+      console.error(errorMessage);
 
-        const questions = [
-          {
-            type: 'confirm',
-            initial: true,
-            name: 'updateToken',
-            message: chalk.yellow('Would you like to try to retrieve a new token?'),
-          },
-        ];
+      const questions = [
+        {
+          type: 'confirm',
+          initial: true,
+          name: 'updateToken',
+          message: chalk.yellow('Would you like to try to retrieve a new token?'),
+        },
+      ];
 
-        const { updateToken } = await prompt(questions);
-        if (updateToken) {
-          await retrieveAndSaveAccessToken(cfg);
-          return api(method, params);
-        } else {
-          throw new Error(errorMessage);
-        }
+      const { updateToken } = await prompt(questions);
+      if (updateToken) {
+        await retrieveAndSaveAccessToken(cfg);
+        return api(method, params);
       } else {
         throw new Error(errorMessage);
       }
+    } else {
+      throw new Error(errorMessage);
     }
+  }
 
-    if (res.response !== void 0) {
-      return res.response;
-    }
-  } catch (e) {
-    console.error(e);
+  if (res.response !== void 0) {
+    return res.response;
   }
 }
 
 async function upload(uploadUrl, bundleFile) {
   const formData = new FormData();
   formData.append('file', fs.createReadStream(bundleFile), { contentType: 'application/zip' });
-  try {
-    const upload = await fetch(uploadUrl, {
-      method: 'POST',
-      headers: formData.getHeaders(),
-      body: formData,
-    });
-    return await upload.json();
-  } catch (e) {
-    console.error('upload error', e);
-  }
+  const upload = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: formData.getHeaders(),
+    body: formData,
+  });
+  return await upload.json();
 }
 
 async function handleQueue(user_id, base_url, key, ts, version, handled, cfg) {
@@ -479,7 +510,7 @@ async function run(cfg) {
     const uploadServer = await api('apps.getGoHostingUploadServer', params);
 
     if (!uploadServer || !uploadServer.upload_url) {
-      throw new Error(JSON.stringify('upload_url is undefined', r));
+      throw new Error(`upload_url is undefined: ${JSON.stringify(uploadServer)}`);
     }
 
     const uploadURL = uploadServer.upload_url;
@@ -508,7 +539,7 @@ async function run(cfg) {
       console.log('Uploaded version ' + taskData.version + '!');
       return getQueue(taskData.version, cfg);
     } else {
-      console.error('Upload error:', r);
+      console.error('Upload error: missing task version', taskData);
       process.exit(1);
     }
   } catch (e) {
