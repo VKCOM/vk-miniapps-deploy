@@ -9,8 +9,7 @@
     "lint:eslint": "eslint ./index.js",
     "lint:prettier": "prettier --check ./index.js",
     "lint:fix": "eslint ./index.js --fix",
-    "lint:ci": "yarn lint:eslint && yarn lint:prettier",
-    "postinstall": "node -e \"console.warn('WARNING: Versions below 1.0.0 are deprecated. Please upgrade to v1.0.0 or later.')\""
+    "lint:ci": "yarn lint:eslint && yarn lint:prettier"
   },
   "license": "MIT",
   "engines": {
